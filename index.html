@@ -11,8 +11,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding: 15px;
+      box-sizing: border-box;
     }
     .card {
       background: white;
@@ -20,15 +22,40 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       text-align: center;
+    }
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      background: #f1f5f9;
+      padding: 5px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .word-box {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       padding: 20px;
       border-radius: 8px;
-      margin: 20px 0;
+      margin: 15px 0 20px 0;
     }
     .word-box span {
       font-size: 12px;
@@ -50,7 +77,7 @@
       box-sizing: border-box;
       margin-bottom: 12px;
     }
-    button {
+    .action-btn {
       width: 100%;
       padding: 12px;
       font-size: 16px;
@@ -61,13 +88,49 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    button:hover { background-color: #1d4ed8; }
-    .btn-next { background-color: #10b981; }
+    .action-btn:hover { background-color: #1d4ed8; }
+    .btn-next { background-color: #10b981; margin-top: 10px; }
     .btn-next:hover { background-color: #059669; }
+    
+    /* Multiple Choice Buttons */
+    .mc-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mc-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #f8fafc;
+      color: #0f172a;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .mc-btn:hover:not(:disabled) {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+    }
+    .mc-btn.correct {
+      background-color: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+      font-weight: bold;
+    }
+    .mc-btn.wrong {
+      background-color: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+
     .feedback {
       margin-top: 15px;
       font-weight: bold;
       font-size: 16px;
+      min-height: 22px;
     }
     .hidden { display: none; }
   </style>
@@ -76,28 +139,42 @@
 
 <div class="card">
   <h1>Vokabel-Trainer 📚</h1>
+
+  <!-- Modus-Auswahl -->
+  <div class="mode-switch">
+    <button id="btn-mode-type" class="mode-btn active" onclick="setMode('type')">✍️ Wort eingeben</button>
+    <button id="btn-mode-mc" class="mode-btn" onclick="setMode('mc')">🔘 Multiple Choice</button>
+  </div>
   
   <div id="quiz-area">
-    <p id="progress" style="color: #64748b; font-size: 14px;">Frage 1 von 5</p>
+    <p id="progress" style="color: #64748b; font-size: 14px; margin: 0;">Frage 1 von 5</p>
     <div class="word-box">
       <span>Englisch</span>
       <h2 id="english-word">to learn</h2>
     </div>
-    <input type="text" id="answer-input" placeholder="Deutsche Übersetzung..." autocomplete="off">
-    <button id="check-btn" onclick="checkAnswer()">Prüfen</button>
-    <button id="next-btn" class="btn-next hidden" onclick="nextWord()">Nächste Vokabel</button>
+
+    <!-- Bereich 1: Texteingabe -->
+    <div id="type-area">
+      <input type="text" id="answer-input" placeholder="Deutsche Übersetzung..." autocomplete="off">
+      <button id="check-btn" class="action-btn" onclick="checkTypedAnswer()">Prüfen</button>
+    </div>
+
+    <!-- Bereich 2: Multiple Choice -->
+    <div id="mc-area" class="mc-options hidden"></div>
+
     <p id="feedback" class="feedback"></p>
+    <button id="next-btn" class="action-btn btn-next hidden" onclick="nextWord()">Nächste Vokabel</button>
   </div>
 
   <div id="result-area" class="hidden">
     <h2>Geschafft! 🏆</h2>
     <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
-    <button onclick="restartQuiz()">Nochmal lernen</button>
+    <button class="action-btn" onclick="restartQuiz()">Nochmal lernen</button>
   </div>
 </div>
 
 <script>
-  // HIER KANNST DU DEINE VOKABELN ANPASSEN:
+  // HIER KANNST DU DEINE VOKABELN ANPASSEN (mindestens 3 Vokabeln für Multiple Choice!):
   const vocabList = [
     { english: 'to learn', german: 'lernen' },
     { english: 'school', german: 'Schule' },
@@ -106,29 +183,94 @@
     { english: 'exam', german: 'Prüfung' }
   ];
 
+  let currentMode = 'type'; // 'type' oder 'mc'
   let currentIndex = 0;
   let score = 0;
 
   const progressEl = document.getElementById('progress');
   const englishEl = document.getElementById('english-word');
+  const typeArea = document.getElementById('type-area');
+  const mcArea = document.getElementById('mc-area');
   const inputEl = document.getElementById('answer-input');
   const checkBtn = document.getElementById('check-btn');
   const nextBtn = document.getElementById('next-btn');
   const feedbackEl = document.getElementById('feedback');
 
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-mode-type').classList.toggle('active', mode === 'type');
+    document.getElementById('btn-mode-mc').classList.toggle('active', mode === 'mc');
+    restartQuiz();
+  }
+
   function loadWord() {
     const current = vocabList[currentIndex];
     progressEl.textContent = `Frage ${currentIndex + 1} von ${vocabList.length}`;
     englishEl.textContent = current.english;
-    inputEl.value = '';
-    inputEl.disabled = false;
     feedbackEl.textContent = '';
-    checkBtn.classList.remove('hidden');
     nextBtn.classList.add('hidden');
-    inputEl.focus();
+
+    if (currentMode === 'type') {
+      typeArea.classList.remove('hidden');
+      mcArea.classList.add('hidden');
+      inputEl.value = '';
+      inputEl.disabled = false;
+      checkBtn.classList.remove('hidden');
+      inputEl.focus();
+    } else {
+      typeArea.classList.add('hidden');
+      mcArea.classList.remove('hidden');
+      generateMultipleChoice(current.german);
+    }
   }
 
-  function checkAnswer() {
+  function generateMultipleChoice(correctAnswer) {
+    mcArea.innerHTML = '';
+    
+    // Alle anderen deutschen Wörter als falsche Optionen sammeln
+    const wrongOptions = vocabList
+      .filter(item => item.german !== correctAnswer)
+      .map(item => item.german);
+    
+    // Zufällig 2 falsche Antworten auswählen
+    wrongOptions.sort(() => Math.random() - 0.5);
+    const selectedOptions = [correctAnswer, ...wrongOptions.slice(0, 2)];
+    
+    // Alle 3 Antwortmöglichkeiten zufällig mischen
+    selectedOptions.sort(() => Math.random() - 0.5);
+
+    selectedOptions.forEach(option => {
+      const btn = document.createElement('button');
+      btn.className = 'mc-btn';
+      btn.textContent = option;
+      btn.onclick = () => checkMcAnswer(btn, option, correctAnswer);
+      mcArea.appendChild(btn);
+    });
+  }
+
+  function checkMcAnswer(clickedBtn, selectedOption, correctAnswer) {
+    const allButtons = mcArea.querySelectorAll('.mc-btn');
+    allButtons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === correctAnswer) {
+        btn.classList.add('correct');
+      }
+    });
+
+    if (selectedOption === correctAnswer) {
+      feedbackEl.textContent = 'Richtig! 🎉';
+      feedbackEl.style.color = '#10b981';
+      score++;
+    } else {
+      clickedBtn.classList.add('wrong');
+      feedbackEl.textContent = `Falsch! Richtig ist "${correctAnswer}"`;
+      feedbackEl.style.color = '#ef4444';
+    }
+
+    nextBtn.classList.remove('hidden');
+  }
+
+  function checkTypedAnswer() {
     const userAnswer = inputEl.value.trim().toLowerCase();
     const correctAnswer = vocabList[currentIndex].german.toLowerCase();
     
@@ -165,10 +307,10 @@
     loadWord();
   }
 
-  // Enter-Taste unterstützen
+  // Enter-Taste im Eingabe-Modus unterstützen
   inputEl.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !checkBtn.classList.contains('hidden')) {
-      checkAnswer();
+    if (e.key === 'Enter' && currentMode === 'type' && !checkBtn.classList.contains('hidden')) {
+      checkTypedAnswer();
     }
   });
 
