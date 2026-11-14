@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vokabel-Trainer</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+    .word-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .word-box span {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 1px;
+    }
+    .word-box h2 {
+      margin: 8px 0 0 0;
+      font-size: 28px;
+      color: #0f172a;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #2563eb;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background-color: #1d4ed8; }
+    .btn-next { background-color: #10b981; }
+    .btn-next:hover { background-color: #059669; }
+    .feedback {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Vokabel-Trainer 📚</h1>
+  
+  <div id="quiz-area">
+    <p id="progress" style="color: #64748b; font-size: 14px;">Frage 1 von 5</p>
+    <div class="word-box">
+      <span>Englisch</span>
+      <h2 id="english-word">to learn</h2>
+    </div>
+    <input type="text" id="answer-input" placeholder="Deutsche Übersetzung..." autocomplete="off">
+    <button id="check-btn" onclick="checkAnswer()">Prüfen</button>
+    <button id="next-btn" class="btn-next hidden" onclick="nextWord()">Nächste Vokabel</button>
+    <p id="feedback" class="feedback"></p>
+  </div>
+
+  <div id="result-area" class="hidden">
+    <h2>Geschafft! 🏆</h2>
+    <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
+    <button onclick="restartQuiz()">Nochmal lernen</button>
+  </div>
+</div>
+
+<script>
+  // HIER KANNST DU DEINE VOKABELN ANPASSEN:
+  const vocabList = [
+    { english: 'to learn', german: 'lernen' },
+    { english: 'school', german: 'Schule' },
+    { english: 'teacher', german: 'Lehrer' },
+    { english: 'homework', german: 'Hausaufgabe' },
+    { english: 'exam', german: 'Prüfung' }
+  ];
+
+  let currentIndex = 0;
+  let score = 0;
+
+  const progressEl = document.getElementById('progress');
+  const englishEl = document.getElementById('english-word');
+  const inputEl = document.getElementById('answer-input');
+  const checkBtn = document.getElementById('check-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const feedbackEl = document.getElementById('feedback');
+
+  function loadWord() {
+    const current = vocabList[currentIndex];
+    progressEl.textContent = `Frage ${currentIndex + 1} von ${vocabList.length}`;
+    englishEl.textContent = current.english;
+    inputEl.value = '';
+    inputEl.disabled = false;
+    feedbackEl.textContent = '';
+    checkBtn.classList.remove('hidden');
+    nextBtn.classList.add('hidden');
+    inputEl.focus();
+  }
+
+  function checkAnswer() {
+    const userAnswer = inputEl.value.trim().toLowerCase();
+    const correctAnswer = vocabList[currentIndex].german.toLowerCase();
+    
+    inputEl.disabled = true;
+    checkBtn.classList.add('hidden');
+    nextBtn.classList.remove('hidden');
+
+    if (userAnswer === correctAnswer) {
+      feedbackEl.textContent = 'Richtig! 🎉';
+      feedbackEl.style.color = '#10b981';
+      score++;
+    } else {
+      feedbackEl.textContent = `Falsch! Richtig wäre: "${vocabList[currentIndex].german}"`;
+      feedbackEl.style.color = '#ef4444';
+    }
+  }
+
+  function nextWord() {
+    currentIndex++;
+    if (currentIndex < vocabList.length) {
+      loadWord();
+    } else {
+      document.getElementById('quiz-area').classList.add('hidden');
+      document.getElementById('result-area').classList.remove('hidden');
+      document.getElementById('score-text').textContent = `Du hast ${score} von ${vocabList.length} Vokabeln richtig!`;
+    }
+  }
+
+  function restartQuiz() {
+    currentIndex = 0;
+    score = 0;
+    document.getElementById('result-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+    loadWord();
+  }
+
+  // Enter-Taste unterstützen
+  inputEl.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !checkBtn.classList.contains('hidden')) {
+      checkAnswer();
+    }
+  });
+
+  loadWord();
+</script>
+
+</body>
+</html>
