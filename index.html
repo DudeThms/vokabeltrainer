@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vokabel-Trainer</title>
+  <title>Vokabel-Trainer - Karla & Moritz</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -30,11 +30,6 @@
       margin: 0 0 15px 0;
       color: #1e293b;
     }
-    h2 {
-      font-size: 18px;
-      color: #334155;
-      margin-bottom: 15px;
-    }
     .setup-section {
       margin-bottom: 20px;
       text-align: left;
@@ -53,8 +48,8 @@
     }
     .name-btn {
       flex: 1;
-      padding: 10px;
-      font-size: 15px;
+      padding: 12px;
+      font-size: 16px;
       font-weight: 600;
       border: 2px solid #cbd5e1;
       border-radius: 8px;
@@ -92,6 +87,34 @@
       margin-top: 10px;
     }
     .start-btn:hover { background-color: #1d4ed8; }
+
+    /* Unterseiten-Design */
+    .profile-header {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .profile-header h2 {
+      margin: 0;
+      font-size: 20px;
+      text-align: left;
+    }
+    .back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
     .mode-switch {
       display: flex;
@@ -204,12 +227,12 @@
 <body>
 
 <div class="card">
-  <!-- 1. SETUP-BILDSCHIRM -->
+  <!-- 1. HAUPT-AUSWAHLBILDSCHIRM (Startseite) -->
   <div id="setup-screen">
     <h1>Vokabel-Trainer 📚</h1>
     
     <div class="setup-section">
-      <label>Wer lernt gerade?</label>
+      <label>Wer bist du?</label>
       <div class="name-buttons">
         <button type="button" id="name-karla" class="name-btn active" onclick="selectName('Karla')">Karla</button>
         <button type="button" id="name-moritz" class="name-btn" onclick="selectName('Moritz')">Moritz</button>
@@ -236,14 +259,18 @@
       </select>
     </div>
 
-    <button class="start-btn" onclick="startQuiz()">Lernen starten 🚀</button>
+    <button class="start-btn" onclick="openProfilePage()">Zu meiner Lernseite 🚀</button>
   </div>
 
-  <!-- 2. QUIZ-BILDSCHIRM -->
+  <!-- 2. PERSONALISIERTE UNTERSEITE (FÜR KARLA ODER MORITZ) -->
   <div id="quiz-screen" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-      <h1 id="greeting-title" style="margin: 0; font-size: 18px; color: #2563eb;">Vokabel-Trainer</h1>
-      <button onclick="backToSetup()" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px; text-decoration: underline;">⚙️ Änderung</button>
+    
+    <div class="profile-header">
+      <div>
+        <h2 id="profile-title">Profil</h2>
+        <span id="profile-subtitle" style="font-size: 12px; opacity: 0.9;">Fach</span>
+      </div>
+      <button class="back-btn" onclick="backToSetup()">⬅️ Zur Auswahl</button>
     </div>
 
     <div class="mode-switch">
@@ -270,7 +297,7 @@
     </div>
 
     <div id="result-area" class="hidden">
-      <h2>Geschafft! 🏆</h2>
+      <h2>Super gemacht! 🏆</h2>
       <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
       <button class="action-btn" onclick="startQuiz()">Nochmal lernen</button>
     </div>
@@ -320,4 +347,57 @@
     { level: 0, english: "eight", german: "acht" },
     { level: 0, english: "nine", german: "neun" },
     { level: 0, english: "ten", german: "zehn" },
-    { level: 0, english
+    { level: 0, english: "eleven", german: "elf" },
+    { level: 0, english: "twelve", german: "zwölf" },
+    { level: 0, english: "I love dogs.", german: "Ich liebe Hunde., Ich mag Hunde total gern." },
+    { level: 0, english: "Dogs love squirrels.", german: "Hunde lieben Eichhörnchen." },
+    { level: 0, english: "That was close!", german: "Das war knapp!" },
+    { level: 0, english: "animal", german: "Tier" },
+    { level: 0, english: "Thank you.", german: "Danke." },
+    { level: 0, english: "This is Pia.", german: "Das (hier) ist Pia." },
+    { level: 0, english: "a girl from Germany", german: "ein Mädchen aus Deutschland" },
+    { level: 0, english: "school", german: "Schule" },
+    { level: 0, english: "Greenwich Park is big.", german: "Der Greenwich Park ist groß." },
+    { level: 0, english: "It's great for cycling.", german: "Er ist super zum Radfahren." },
+    { level: 0, english: "I don't like cycling.", german: "Ich fahre nicht gern Rad." },
+    { level: 0, english: "My favourite sport is football.", german: "Mein Lieblingssport ist Fußball." },
+    { level: 0, english: "I like the boating lake.", german: "Ich mag den See mit den Booten., Mir gefällt der See mit den Booten." },
+    { level: 0, english: "What's that?", german: "Was ist das?" },
+    { level: 0, english: "Let's go!", german: "Los!, Lasst uns hingehen!, Los, gehen wir hin!" },
+    { level: 0, english: "It's fun.", german: "Es macht Spaß." },
+    { level: 0, english: "puzzle", german: "Rätsel" },
+    { level: 0, english: "rat", german: "Ratte" },
+    { level: 0, english: "I'm not scared of dogs.", german: "Ich habe keine Angst vor Hunden." },
+    { level: 0, english: "I'm scared of cats.", german: "Ich habe Angst vor Katzen." },
+    { level: 0, english: "Worms are OK.", german: "Würmer sind o.k." },
+    { level: 0, english: "Rabbits are nice.", german: "Kaninchen sind nett." },
+    { level: 0, english: "They're my friends.", german: "Sie sind meine Freunde." },
+    { level: 0, english: "They don't eat mice.", german: "Sie essen keine Mäuse." },
+    { level: 0, english: "word", german: "Wort" },
+    { level: 0, english: "hamster", german: "Hamster" },
+    { level: 0, english: "squirrel", german: "Eichhörnchen" },
+    { level: 0, english: "fish", german: "Fisch" },
+    { level: 0, english: "budgie", german: "Wellensittich" },
+    { level: 0, english: "dog", german: "Hund" },
+    { level: 0, english: "rabbit", german: "Kaninchen" },
+    { level: 0, english: "bear", german: "Bär" },
+    { level: 0, english: "parrot", german: "Papagei" },
+    { level: 0, english: "worm", german: "Wurm" },
+    { level: 0, english: "cat", german: "Katze" },
+    { level: 0, english: "horse", german: "Pferd" },
+    { level: 0, english: "Inline skating is great.", german: "Inlineskatefahren ist toll." },
+    { level: 0, english: "Volleyball is a great sport.", german: "Volleyball ist ein toller Sport." },
+    { level: 0, english: "the same", german: "der-/die-/dasselbe, der/die/das gleiche" },
+    { level: 0, english: "colour", german: "Farbe" },
+    { level: 0, english: "correct", german: "richtig, korrekt" },
+    { level: 0, english: "What's your favourite colour?", german: "Was ist deine Lieblingsfarbe?" },
+    { level: 0, english: "black", german: "schwarz" },
+    { level: 0, english: "blue", german: "blau" },
+    { level: 0, english: "brown", german: "braun" },
+    { level: 0, english: "green", german: "grün" },
+    { level: 0, english: "grey", german: "grau" },
+    { level: 0, english: "pink", german: "rosa" },
+    { level: 0, english: "purple", german: "lila" },
+    { level: 0, english: "orange", german: "orange" },
+    { level: 0, english: "red", german: "rot" },
+    {
