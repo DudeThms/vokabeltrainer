@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vokabel-Trainer - Green Line 1 (Unit 1)</title>
+  <title>Vokabel-Trainer - Green Line 1</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -18,22 +18,40 @@
     }
     .card {
       background: white;
-      padding: 30px;
+      padding: 25px 30px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 440px;
+      max-width: 460px;
       text-align: center;
     }
     h1 {
       font-size: 22px;
-      margin-top: 0;
+      margin: 0 0 15px 0;
       color: #1e293b;
     }
-    .subtitle {
-      font-size: 13px;
-      color: #64748b;
+    .filter-box {
       margin-bottom: 15px;
+      text-align: left;
+    }
+    .filter-box label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      color: #475569;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-weight: 500;
+      cursor: pointer;
     }
     .mode-switch {
       display: flex;
@@ -41,7 +59,7 @@
       background: #f1f5f9;
       padding: 5px;
       border-radius: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     .mode-btn {
       flex: 1;
@@ -65,7 +83,7 @@
       border: 1px solid #e2e8f0;
       padding: 20px;
       border-radius: 8px;
-      margin: 15px 0 20px 0;
+      margin: 12px 0 18px 0;
     }
     .lang-badge {
       display: inline-block;
@@ -86,8 +104,9 @@
     }
     .word-box h2 {
       margin: 12px 0 0 0;
-      font-size: 26px;
+      font-size: 24px;
       color: #0f172a;
+      word-wrap: break-word;
     }
     input {
       width: 100%;
@@ -152,7 +171,7 @@
     .feedback {
       margin-top: 15px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       min-height: 22px;
     }
     .hidden { display: none; }
@@ -162,7 +181,26 @@
 
 <div class="card">
   <h1>Green Line 1 📚</h1>
-  <div class="subtitle">Unit 1: Zufälliger Richtungswechsel (EN ↔ DE)</div>
+
+  <!-- Unit / Abschnitts-Auswahl -->
+  <div class="filter-box">
+    <label for="unit-select">Lernbereich auswählen:</label>
+    <select id="unit-select" onchange="updateVocabPool()">
+      <optgroup label="Einzelne Abschnitte lernen">
+        <option value="single_0">Nur Pick-up A: I'm from Greenwich</option>
+        <option value="single_1">Nur Unit 1 – Check-in: It's fun at home</option>
+        <option value="single_2">Nur Unit 1 – Station 1: This is my family</option>
+        <option value="single_3">Nur Unit 1 – Station 2: What's the problem?</option>
+        <option value="single_4">Nur Unit 1 – Story & Check-out</option>
+      </optgroup>
+      <optgroup label="Kumulativ lernen (Alles bis ...)">
+        <option value="upto_1">Alles bis einschl. Unit 1 Check-in</option>
+        <option value="upto_2">Alles bis einschl. Unit 1 Station 1</option>
+        <option value="upto_3">Alles bis einschl. Unit 1 Station 2</option>
+        <option value="upto_4" selected>Kompletter Wortschatz (PU A bis Unit 1 Ende)</option>
+      </optgroup>
+    </select>
+  </div>
 
   <!-- Modus-Auswahl -->
   <div class="mode-switch">
@@ -193,190 +231,114 @@
   <div id="result-area" class="hidden">
     <h2>Geschafft! 🏆</h2>
     <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
-    <button class="action-btn" onclick="restartQuiz()">Nochmal lernen</button>
+    <button class="action-btn" onclick="updateVocabPool()">Nochmal mischen & lernen</button>
   </div>
 </div>
 
 <script>
-  const vocabList = [
-    { english: 'back to school', german: 'wieder in der Schule' },
-    { english: 'to start', german: 'beginnen, anfangen' },
-    { english: 'new', german: 'neu' },
-    { english: 'pupil', german: 'Schüler/in' },
-    { english: 'teacher', german: 'Lehrer/in' },
-    { english: 'classroom', german: 'Klassenzimmer' },
-    { english: 'school bag', german: 'Schultasche' },
-    { english: 'book', german: 'Buch' },
-    { english: 'exercise book', german: 'Heft' },
-    { english: 'pen', german: 'Stift, Kugelschreiber' },
-    { english: 'pencil', german: 'Bleistift' },
-    { english: 'board', german: 'Tafel' },
-    { english: 'friend', german: 'Freund/in' },
-    { english: 'to meet', german: 'treffen' },
-    { english: 'to talk (about)', german: 'sprechen (über)' },
-    { english: 'hobby', german: 'Hobby' },
-    { english: 'sport', german: 'Sport' },
-    { english: 'music', german: 'Musik' },
-    { english: 'pet', german: 'Haustier' },
-    { english: 'family', german: 'Familie' }
-  ];
-
-  let currentMode = 'type';
-  let currentIndex = 0;
-  let score = 0;
-  let isEnToDe = true; // true = Englisch -> Deutsch, false = Deutsch -> Englisch
-
-  const progressEl = document.getElementById('progress');
-  const langLabelEl = document.getElementById('lang-label');
-  const promptWordEl = document.getElementById('prompt-word');
-  const typeArea = document.getElementById('type-area');
-  const mcArea = document.getElementById('mc-area');
-  const inputEl = document.getElementById('answer-input');
-  const checkBtn = document.getElementById('check-btn');
-  const nextBtn = document.getElementById('next-btn');
-  const feedbackEl = document.getElementById('feedback');
-
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('btn-mode-type').classList.toggle('active', mode === 'type');
-    document.getElementById('btn-mode-mc').classList.toggle('active', mode === 'mc');
-    restartQuiz();
-  }
-
-  function loadWord() {
-    const current = vocabList[currentIndex];
-    progressEl.textContent = `Frage ${currentIndex + 1} von ${vocabList.length}`;
-    feedbackEl.textContent = '';
-    nextBtn.classList.add('hidden');
-
-    // Zufällig entscheiden: 50% Englisch -> Deutsch, 50% Deutsch -> Englisch
-    isEnToDe = Math.random() < 0.5;
-
-    const questionText = isEnToDe ? current.english : current.german;
-    const expectedAnswer = isEnToDe ? current.german : current.english;
-
-    // Label und Platzhalter anpassen
-    if (isEnToDe) {
-      langLabelEl.textContent = 'Englisch';
-      langLabelEl.className = 'lang-badge lang-en';
-      inputEl.placeholder = 'Deutsche Übersetzung...';
-    } else {
-      langLabelEl.textContent = 'Deutsch';
-      langLabelEl.className = 'lang-badge lang-de';
-      inputEl.placeholder = 'Englische Übersetzung...';
-    }
-
-    promptWordEl.textContent = questionText;
-
-    if (currentMode === 'type') {
-      typeArea.classList.remove('hidden');
-      mcArea.classList.add('hidden');
-      inputEl.value = '';
-      inputEl.disabled = false;
-      checkBtn.classList.remove('hidden');
-      inputEl.focus();
-    } else {
-      typeArea.classList.add('hidden');
-      mcArea.classList.remove('hidden');
-      generateMultipleChoice(expectedAnswer);
-    }
-  }
-
-  function generateMultipleChoice(correctAnswer) {
-    mcArea.innerHTML = '';
-    
-    // Passende falsche Antworten in der Zielsprache sammeln
-    const wrongOptions = vocabList
-      .map(item => isEnToDe ? item.german : item.english)
-      .filter(word => word !== correctAnswer);
-    
-    wrongOptions.sort(() => Math.random() - 0.5);
-    const selectedOptions = [correctAnswer, ...wrongOptions.slice(0, 2)];
-    selectedOptions.sort(() => Math.random() - 0.5);
-
-    selectedOptions.forEach(option => {
-      const btn = document.createElement('button');
-      btn.className = 'mc-btn';
-      btn.textContent = option;
-      btn.onclick = () => checkMcAnswer(btn, option, correctAnswer);
-      mcArea.appendChild(btn);
-    });
-  }
-
-  function checkMcAnswer(clickedBtn, selectedOption, correctAnswer) {
-    const allButtons = mcArea.querySelectorAll('.mc-btn');
-    allButtons.forEach(btn => {
-      btn.disabled = true;
-      if (btn.textContent === correctAnswer) {
-        btn.classList.add('correct');
-      }
-    });
-
-    if (selectedOption === correctAnswer) {
-      feedbackEl.textContent = 'Richtig! 🎉';
-      feedbackEl.style.color = '#10b981';
-      score++;
-    } else {
-      clickedBtn.classList.add('wrong');
-      feedbackEl.textContent = `Falsch! Richtig ist: "${correctAnswer}"`;
-      feedbackEl.style.color = '#ef4444';
-    }
-
-    nextBtn.classList.remove('hidden');
-  }
-
-  function checkTypedAnswer() {
-    const userAnswer = inputEl.value.trim().toLowerCase();
-    const originalCorrect = isEnToDe ? vocabList[currentIndex].german : vocabList[currentIndex].english;
-    const correctAnswerLower = originalCorrect.toLowerCase();
-    
-    if (userAnswer === '') return; // Leere Eingabe ignorieren
-
-    inputEl.disabled = true;
-    checkBtn.classList.add('hidden');
-    nextBtn.classList.remove('hidden');
-
-    // Prüft auf exakte Übereinstimmung oder ob das Wort in einer Mehrfachbedeutung vorkommt (z. B. "beginnen" bei "beginnen, anfangen")
-    const possibleAnswers = correctAnswerLower.split(',').map(s => s.trim());
-    const isCorrect = userAnswer === correctAnswerLower || possibleAnswers.includes(userAnswer);
-
-    if (isCorrect) {
-      feedbackEl.textContent = 'Richtig! 🎉';
-      feedbackEl.style.color = '#10b981';
-      score++;
-    } else {
-      feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
-      feedbackEl.style.color = '#ef4444';
-    }
-  }
-
-  function nextWord() {
-    currentIndex++;
-    if (currentIndex < vocabList.length) {
-      loadWord();
-    } else {
-      document.getElementById('quiz-area').classList.add('hidden');
-      document.getElementById('result-area').classList.remove('hidden');
-      document.getElementById('score-text').textContent = `Du hast ${score} von ${vocabList.length} Vokabeln richtig gewusst!`;
-    }
-  }
-
-  function restartQuiz() {
-    currentIndex = 0;
-    score = 0;
-    document.getElementById('result-area').classList.add('hidden');
-    document.getElementById('quiz-area').classList.remove('hidden');
-    loadWord();
-  }
-
-  inputEl.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && currentMode === 'type' && !checkBtn.classList.contains('hidden')) {
-      checkTypedAnswer();
-    }
-  });
-
-  loadWord();
-</script>
-
-</body>
-</html>
+  // Alle ausgelesenen Vokabeln aus den Buchseiten (S. 198 - 207)
+  const allVocab = [
+    // --- Level 0: Pick-up A ---
+    { level: 0, english: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
+    { level: 0, english: "Look!", german: "Schau! / Schaut mal!" },
+    { level: 0, english: "two boys and a dog", german: "zwei Jungen und ein Hund" },
+    { level: 0, english: "in Greenwich Park", german: "im Greenwich Park" },
+    { level: 0, english: "Dogs are my friends, but not cats.", german: "Hunde sind meine Freunde, aber Katzen nicht." },
+    { level: 0, english: "I'm a mouse.", german: "Ich bin eine Maus." },
+    { level: 0, english: "mouse", german: "Maus" },
+    { level: 0, english: "mice", german: "Mäuse" },
+    { level: 0, english: "Here's your ball.", german: "Hier ist dein Ball." },
+    { level: 0, english: "Hello.", german: "Hallo." },
+    { level: 0, english: "I'm Pia.", german: "Ich heiße Pia., Ich bin Pia." },
+    { level: 0, english: "You're a nice dog, Sherlock.", german: "Du bist ein lieber Hund." },
+    { level: 0, english: "What's your name?", german: "Wie heißt du?, Wie heißen Sie?" },
+    { level: 0, english: "Sorry!", german: "Entschuldigung!, Tut mir leid!" },
+    { level: 0, english: "My dog is crazy.", german: "Mein Hund ist verrückt." },
+    { level: 0, english: "My name is Luke.", german: "Ich heiße Luke." },
+    { level: 0, english: "We're from Greenwich.", german: "Wir sind aus Greenwich." },
+    { level: 0, english: "Where are you from?", german: "Woher kommst du?, Woher kommt ihr?, Woher kommen Sie?" },
+    { level: 0, english: "Are you on holiday?", german: "Sind Sie im Urlaub?, Seid ihr im Urlaub?, Bist du im Urlaub?" },
+    { level: 0, english: "yes", german: "ja" },
+    { level: 0, english: "I'm here with my parents.", german: "Ich bin mit meinen Eltern hier." },
+    { level: 0, english: "How old are you?", german: "Wie alt bist du?, Wie alt seid ihr?, Wie alt sind Sie?" },
+    { level: 0, english: "You too?", german: "Du auch?" },
+    { level: 0, english: "no", german: "nein" },
+    { level: 0, english: "German", german: "deutsch, Deutsch, aus Deutschland, Deutsche/r" },
+    { level: 0, english: "different", german: "anders, unterschiedlich, verschieden" },
+    { level: 0, english: "I'm English.", german: "Ich bin Engländer/in." },
+    { level: 0, english: "one", german: "eins" },
+    { level: 0, english: "two", german: "zwei" },
+    { level: 0, english: "three", german: "drei" },
+    { level: 0, english: "four", german: "vier" },
+    { level: 0, english: "five", german: "fünf" },
+    { level: 0, english: "six", german: "sechs" },
+    { level: 0, english: "seven", german: "sieben" },
+    { level: 0, english: "eight", german: "acht" },
+    { level: 0, english: "nine", german: "neun" },
+    { level: 0, english: "ten", german: "zehn" },
+    { level: 0, english: "eleven", german: "elf" },
+    { level: 0, english: "twelve", german: "zwölf" },
+    { level: 0, english: "I love dogs.", german: "Ich liebe Hunde., Ich mag Hunde total gern." },
+    { level: 0, english: "Dogs love squirrels.", german: "Hunde lieben Eichhörnchen." },
+    { level: 0, english: "That was close!", german: "Das war knapp!" },
+    { level: 0, english: "animal", german: "Tier" },
+    { level: 0, english: "Thank you.", german: "Danke." },
+    { level: 0, english: "This is Pia.", german: "Das (hier) ist Pia." },
+    { level: 0, english: "a girl from Germany", german: "ein Mädchen aus Deutschland" },
+    { level: 0, english: "school", german: "Schule" },
+    { level: 0, english: "Greenwich Park is big.", german: "Der Greenwich Park ist groß." },
+    { level: 0, english: "It's great for cycling.", german: "Er ist super zum Radfahren." },
+    { level: 0, english: "I don't like cycling.", german: "Ich fahre nicht gern Rad." },
+    { level: 0, english: "My favourite sport is football.", german: "Mein Lieblingssport ist Fußball." },
+    { level: 0, english: "I like the boating lake.", german: "Ich mag den See mit den Booten., Mir gefällt der See mit den Booten." },
+    { level: 0, english: "What's that?", german: "Was ist das?" },
+    { level: 0, english: "Let's go!", german: "Los!, Lasst uns hingehen!, Los, gehen wir hin!" },
+    { level: 0, english: "It's fun.", german: "Es macht Spaß." },
+    { level: 0, english: "puzzle", german: "Rätsel" },
+    { level: 0, english: "rat", german: "Ratte" },
+    { level: 0, english: "I'm not scared of dogs.", german: "Ich habe keine Angst vor Hunden." },
+    { level: 0, english: "I'm scared of cats.", german: "Ich habe Angst vor Katzen." },
+    { level: 0, english: "Worms are OK.", german: "Würmer sind o.k." },
+    { level: 0, english: "Rabbits are nice.", german: "Kaninchen sind nett." },
+    { level: 0, english: "They're my friends.", german: "Sie sind meine Freunde." },
+    { level: 0, english: "They don't eat mice.", german: "Sie essen keine Mäuse." },
+    { level: 0, english: "word", german: "Wort" },
+    { level: 0, english: "hamster", german: "Hamster" },
+    { level: 0, english: "squirrel", german: "Eichhörnchen" },
+    { level: 0, english: "fish", german: "Fisch" },
+    { level: 0, english: "budgie", german: "Wellensittich" },
+    { level: 0, english: "dog", german: "Hund" },
+    { level: 0, english: "rabbit", german: "Kaninchen" },
+    { level: 0, english: "bear", german: "Bär" },
+    { level: 0, english: "parrot", german: "Papagei" },
+    { level: 0, english: "worm", german: "Wurm" },
+    { level: 0, english: "cat", german: "Katze" },
+    { level: 0, english: "horse", german: "Pferd" },
+    { level: 0, english: "Inline skating is great.", german: "Inlineskatefahren ist toll." },
+    { level: 0, english: "Volleyball is a great sport.", german: "Volleyball ist ein toller Sport." },
+    { level: 0, english: "the same", german: "der-/die-/dasselbe, der/die/das gleiche" },
+    { level: 0, english: "colour", german: "Farbe" },
+    { level: 0, english: "correct", german: "richtig, korrekt" },
+    { level: 0, english: "What's your favourite colour?", german: "Was ist deine Lieblingsfarbe?" },
+    { level: 0, english: "black", german: "schwarz" },
+    { level: 0, english: "blue", german: "blau" },
+    { level: 0, english: "brown", german: "braun" },
+    { level: 0, english: "green", german: "grün" },
+    { level: 0, english: "grey", german: "grau" },
+    { level: 0, english: "pink", german: "rosa" },
+    { level: 0, english: "purple", german: "lila" },
+    { level: 0, english: "orange", german: "orange" },
+    { level: 0, english: "red", german: "rot" },
+    { level: 0, english: "white", german: "weiß" },
+    { level: 0, english: "yellow", german: "gelb" },
+    { level: 0, english: "picture", german: "Bild, Foto" },
+    { level: 0, english: "people", german: "Leute, Menschen" },
+    { level: 0, english: "thing", german: "Ding, Sache" },
+    { level: 0, english: "number", german: "Zahl, Nummer" },
+    { level: 0, english: "Boat number eight is pink.", german: "Boot Nummer acht ist rosa." },
+    { level: 0, english: "I can see Sherlock.", german: "Ich kann Sherlock sehen., Ich sehe Sherlock." },
+    { level: 0, english: "Roll two dice.", german: "Würfle/Würfelt mit zwei Würfeln." },
+    { level: 0, english: "Four and six is ten.", german: "Vier plus sechs ist zehn." },
+    { level: 0, english: "please", german: "bitte" },
+    { level: 0, english: "Can you name four sports?", german: "Kannst du vier Sportarten nennen?" },
+    { level: 0, english: "Say your phone number.", german
