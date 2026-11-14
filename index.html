@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vokabel-Trainer</title>
+  <title>Vokabel-Trainer - Green Line 1 (Unit 1)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -25,6 +25,16 @@
       max-width: 440px;
       text-align: center;
     }
+    h1 {
+      font-size: 22px;
+      margin-top: 0;
+      color: #1e293b;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 15px;
+    }
     .mode-switch {
       display: flex;
       gap: 8px;
@@ -36,7 +46,7 @@
     .mode-btn {
       flex: 1;
       padding: 8px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       border: none;
       border-radius: 6px;
@@ -65,7 +75,7 @@
     }
     .word-box h2 {
       margin: 8px 0 0 0;
-      font-size: 28px;
+      font-size: 26px;
       color: #0f172a;
     }
     input {
@@ -101,13 +111,15 @@
     .mc-btn {
       width: 100%;
       padding: 12px;
-      font-size: 16px;
+      font-size: 15px;
       background-color: #f8fafc;
       color: #0f172a;
       border: 2px solid #cbd5e1;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
+      text-align: left;
+      padding-left: 15px;
       transition: all 0.15s;
     }
     .mc-btn:hover:not(:disabled) {
@@ -138,19 +150,20 @@
 <body>
 
 <div class="card">
-  <h1>Vokabel-Trainer 📚</h1>
+  <h1>Green Line 1 📚</h1>
+  <div class="subtitle">Unit 1: Back to school</div>
 
   <!-- Modus-Auswahl -->
   <div class="mode-switch">
-    <button id="btn-mode-type" class="mode-btn active" onclick="setMode('type')">✍️ Wort eingeben</button>
+    <button id="btn-mode-type" class="mode-btn active" onclick="setMode('type')">✍️ Eingabe</button>
     <button id="btn-mode-mc" class="mode-btn" onclick="setMode('mc')">🔘 Multiple Choice</button>
   </div>
   
   <div id="quiz-area">
-    <p id="progress" style="color: #64748b; font-size: 14px; margin: 0;">Frage 1 von 5</p>
+    <p id="progress" style="color: #64748b; font-size: 13px; margin: 0;"></p>
     <div class="word-box">
       <span>Englisch</span>
-      <h2 id="english-word">to learn</h2>
+      <h2 id="english-word"></h2>
     </div>
 
     <!-- Bereich 1: Texteingabe -->
@@ -174,16 +187,31 @@
 </div>
 
 <script>
-  // HIER KANNST DU DEINE VOKABELN ANPASSEN (mindestens 3 Vokabeln für Multiple Choice!):
+  // Offizielle / typische Vokabeln aus Green Line 1 - Unit 1 (Bayern Gymnasium)
   const vocabList = [
-    { english: 'to learn', german: 'lernen' },
-    { english: 'school', german: 'Schule' },
-    { english: 'teacher', german: 'Lehrer' },
-    { english: 'homework', german: 'Hausaufgabe' },
-    { english: 'exam', german: 'Prüfung' }
+    { english: 'back to school', german: 'wieder in der Schule' },
+    { english: 'to start', german: 'beginnen, anfangen' },
+    { english: 'new', german: 'neu' },
+    { english: 'pupil', german: 'Schüler/in' },
+    { english: 'teacher', german: 'Lehrer/in' },
+    { english: 'classroom', german: 'Klassenzimmer' },
+    { english: 'school bag', german: 'Schultasche' },
+    { english: 'book', german: 'Buch' },
+    { english: 'exercise book', german: 'Heft' },
+    { english: 'pen', german: 'Stift, Kugelschreiber' },
+    { english: 'pencil', german: 'Bleistift' },
+    { english: 'board', german: 'Tafel' },
+    { english: 'friend', german: 'Freund/in' },
+    { english: 'to meet', german: 'treffen' },
+    { english: 'to talk (about)', german: 'sprechen (über)' },
+    { english: 'hobby', german: 'Hobby' },
+    { english: 'sport', german: 'Sport' },
+    { english: 'music', german: 'Musik' },
+    { english: 'pet', german: 'Haustier' },
+    { english: 'family', german: 'Familie' }
   ];
 
-  let currentMode = 'type'; // 'type' oder 'mc'
+  let currentMode = 'type';
   let currentIndex = 0;
   let score = 0;
 
@@ -227,16 +255,12 @@
   function generateMultipleChoice(correctAnswer) {
     mcArea.innerHTML = '';
     
-    // Alle anderen deutschen Wörter als falsche Optionen sammeln
     const wrongOptions = vocabList
       .filter(item => item.german !== correctAnswer)
       .map(item => item.german);
     
-    // Zufällig 2 falsche Antworten auswählen
     wrongOptions.sort(() => Math.random() - 0.5);
     const selectedOptions = [correctAnswer, ...wrongOptions.slice(0, 2)];
-    
-    // Alle 3 Antwortmöglichkeiten zufällig mischen
     selectedOptions.sort(() => Math.random() - 0.5);
 
     selectedOptions.forEach(option => {
@@ -263,7 +287,7 @@
       score++;
     } else {
       clickedBtn.classList.add('wrong');
-      feedbackEl.textContent = `Falsch! Richtig ist "${correctAnswer}"`;
+      feedbackEl.textContent = `Falsch! Richtig ist: "${correctAnswer}"`;
       feedbackEl.style.color = '#ef4444';
     }
 
@@ -278,7 +302,7 @@
     checkBtn.classList.add('hidden');
     nextBtn.classList.remove('hidden');
 
-    if (userAnswer === correctAnswer) {
+    if (userAnswer === correctAnswer || correctAnswer.includes(userAnswer)) {
       feedbackEl.textContent = 'Richtig! 🎉';
       feedbackEl.style.color = '#10b981';
       score++;
@@ -295,7 +319,7 @@
     } else {
       document.getElementById('quiz-area').classList.add('hidden');
       document.getElementById('result-area').classList.remove('hidden');
-      document.getElementById('score-text').textContent = `Du hast ${score} von ${vocabList.length} Vokabeln richtig!`;
+      document.getElementById('score-text').textContent = `Du hast ${score} von ${vocabList.length} Vokabeln richtig gewusst!`;
     }
   }
 
@@ -307,7 +331,6 @@
     loadWord();
   }
 
-  // Enter-Taste im Eingabe-Modus unterstützen
   inputEl.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && currentMode === 'type' && !checkBtn.classList.contains('hidden')) {
       checkTypedAnswer();
