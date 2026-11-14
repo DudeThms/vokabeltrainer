@@ -67,14 +67,25 @@
       border-radius: 8px;
       margin: 15px 0 20px 0;
     }
-    .word-box span {
-      font-size: 12px;
+    .lang-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: bold;
       text-transform: uppercase;
-      color: #64748b;
-      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      letter-spacing: 0.8px;
+    }
+    .lang-en {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    .lang-de {
+      background-color: #fef3c7;
+      color: #92400e;
     }
     .word-box h2 {
-      margin: 8px 0 0 0;
+      margin: 12px 0 0 0;
       font-size: 26px;
       color: #0f172a;
     }
@@ -151,7 +162,7 @@
 
 <div class="card">
   <h1>Green Line 1 📚</h1>
-  <div class="subtitle">Unit 1: Back to school</div>
+  <div class="subtitle">Unit 1: Zufälliger Richtungswechsel (EN ↔ DE)</div>
 
   <!-- Modus-Auswahl -->
   <div class="mode-switch">
@@ -162,13 +173,13 @@
   <div id="quiz-area">
     <p id="progress" style="color: #64748b; font-size: 13px; margin: 0;"></p>
     <div class="word-box">
-      <span>Englisch</span>
-      <h2 id="english-word"></h2>
+      <span id="lang-label" class="lang-badge lang-en">Englisch</span>
+      <h2 id="prompt-word"></h2>
     </div>
 
     <!-- Bereich 1: Texteingabe -->
     <div id="type-area">
-      <input type="text" id="answer-input" placeholder="Deutsche Übersetzung..." autocomplete="off">
+      <input type="text" id="answer-input" placeholder="Übersetzung eingeben..." autocomplete="off">
       <button id="check-btn" class="action-btn" onclick="checkTypedAnswer()">Prüfen</button>
     </div>
 
@@ -187,7 +198,6 @@
 </div>
 
 <script>
-  // Offizielle / typische Vokabeln aus Green Line 1 - Unit 1 (Bayern Gymnasium)
   const vocabList = [
     { english: 'back to school', german: 'wieder in der Schule' },
     { english: 'to start', german: 'beginnen, anfangen' },
@@ -214,9 +224,11 @@
   let currentMode = 'type';
   let currentIndex = 0;
   let score = 0;
+  let isEnToDe = true; // true = Englisch -> Deutsch, false = Deutsch -> Englisch
 
   const progressEl = document.getElementById('progress');
-  const englishEl = document.getElementById('english-word');
+  const langLabelEl = document.getElementById('lang-label');
+  const promptWordEl = document.getElementById('prompt-word');
   const typeArea = document.getElementById('type-area');
   const mcArea = document.getElementById('mc-area');
   const inputEl = document.getElementById('answer-input');
@@ -234,9 +246,27 @@
   function loadWord() {
     const current = vocabList[currentIndex];
     progressEl.textContent = `Frage ${currentIndex + 1} von ${vocabList.length}`;
-    englishEl.textContent = current.english;
     feedbackEl.textContent = '';
     nextBtn.classList.add('hidden');
+
+    // Zufällig entscheiden: 50% Englisch -> Deutsch, 50% Deutsch -> Englisch
+    isEnToDe = Math.random() < 0.5;
+
+    const questionText = isEnToDe ? current.english : current.german;
+    const expectedAnswer = isEnToDe ? current.german : current.english;
+
+    // Label und Platzhalter anpassen
+    if (isEnToDe) {
+      langLabelEl.textContent = 'Englisch';
+      langLabelEl.className = 'lang-badge lang-en';
+      inputEl.placeholder = 'Deutsche Übersetzung...';
+    } else {
+      langLabelEl.textContent = 'Deutsch';
+      langLabelEl.className = 'lang-badge lang-de';
+      inputEl.placeholder = 'Englische Übersetzung...';
+    }
+
+    promptWordEl.textContent = questionText;
 
     if (currentMode === 'type') {
       typeArea.classList.remove('hidden');
@@ -248,16 +278,17 @@
     } else {
       typeArea.classList.add('hidden');
       mcArea.classList.remove('hidden');
-      generateMultipleChoice(current.german);
+      generateMultipleChoice(expectedAnswer);
     }
   }
 
   function generateMultipleChoice(correctAnswer) {
     mcArea.innerHTML = '';
     
+    // Passende falsche Antworten in der Zielsprache sammeln
     const wrongOptions = vocabList
-      .filter(item => item.german !== correctAnswer)
-      .map(item => item.german);
+      .map(item => isEnToDe ? item.german : item.english)
+      .filter(word => word !== correctAnswer);
     
     wrongOptions.sort(() => Math.random() - 0.5);
     const selectedOptions = [correctAnswer, ...wrongOptions.slice(0, 2)];
@@ -296,49 +327,19 @@
 
   function checkTypedAnswer() {
     const userAnswer = inputEl.value.trim().toLowerCase();
-    const correctAnswer = vocabList[currentIndex].german.toLowerCase();
+    const originalCorrect = isEnToDe ? vocabList[currentIndex].german : vocabList[currentIndex].english;
+    const correctAnswerLower = originalCorrect.toLowerCase();
     
+    if (userAnswer === '') return; // Leere Eingabe ignorieren
+
     inputEl.disabled = true;
     checkBtn.classList.add('hidden');
     nextBtn.classList.remove('hidden');
 
-    if (userAnswer === correctAnswer || correctAnswer.includes(userAnswer)) {
+    // Prüft auf exakte Übereinstimmung oder ob das Wort in einer Mehrfachbedeutung vorkommt (z. B. "beginnen" bei "beginnen, anfangen")
+    const possibleAnswers = correctAnswerLower.split(',').map(s => s.trim());
+    const isCorrect = userAnswer === correctAnswerLower || possibleAnswers.includes(userAnswer);
+
+    if (isCorrect) {
       feedbackEl.textContent = 'Richtig! 🎉';
       feedbackEl.style.color = '#10b981';
-      score++;
-    } else {
-      feedbackEl.textContent = `Falsch! Richtig wäre: "${vocabList[currentIndex].german}"`;
-      feedbackEl.style.color = '#ef4444';
-    }
-  }
-
-  function nextWord() {
-    currentIndex++;
-    if (currentIndex < vocabList.length) {
-      loadWord();
-    } else {
-      document.getElementById('quiz-area').classList.add('hidden');
-      document.getElementById('result-area').classList.remove('hidden');
-      document.getElementById('score-text').textContent = `Du hast ${score} von ${vocabList.length} Vokabeln richtig gewusst!`;
-    }
-  }
-
-  function restartQuiz() {
-    currentIndex = 0;
-    score = 0;
-    document.getElementById('result-area').classList.add('hidden');
-    document.getElementById('quiz-area').classList.remove('hidden');
-    loadWord();
-  }
-
-  inputEl.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && currentMode === 'type' && !checkBtn.classList.contains('hidden')) {
-      checkTypedAnswer();
-    }
-  });
-
-  loadWord();
-</script>
-
-</body>
-</html>
