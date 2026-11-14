@@ -343,3 +343,40 @@
     if (isCorrect) {
       feedbackEl.textContent = 'Richtig! 🎉';
       feedbackEl.style.color = '#10b981';
+      score++;
+    } else {
+      feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
+      feedbackEl.style.color = '#ef4444';
+    }
+  }
+
+  function nextWord() {
+    currentIndex++;
+    if (currentIndex < vocabList.length) {
+      loadWord();
+    } else {
+      document.getElementById('quiz-area').classList.add('hidden');
+      document.getElementById('result-area').classList.remove('hidden');
+      document.getElementById('score-text').textContent = `Du hast ${score} von ${vocabList.length} Vokabeln richtig gewusst!`;
+    }
+  }
+
+  function restartQuiz() {
+    currentIndex = 0;
+    score = 0;
+    document.getElementById('result-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+    loadWord();
+  }
+
+  inputEl.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && currentMode === 'type' && !checkBtn.classList.contains('hidden')) {
+      checkTypedAnswer();
+    }
+  });
+
+  loadWord();
+</script>
+
+</body>
+</html>
