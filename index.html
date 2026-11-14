@@ -60,7 +60,6 @@
       transform: translateY(-2px);
     }
 
-    /* Profil-Unterseiten Design */
     .profile-header {
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: white;
@@ -247,14 +246,14 @@
     </div>
   </div>
 
-  <!-- 2. UNTERSEITE FÜR DAS JEWEILIGE KIND (FÄCHERAUSWAHL & SETUP) -->
+  <!-- 2. UNTERSEITE FÜR DAS JEWEILIGE KINDS -->
   <div id="profile-screen" class="hidden">
     <div class="profile-header">
       <div>
         <h2 id="profile-title">Profil</h2>
         <span style="font-size: 12px; opacity: 0.9;">Lern-Center</span>
       </div>
-      <button class="back-btn" onclick="backToHome()">⬅️ Zur Namenswahl</button>
+      <button class="back-btn" onclick="backToHome()">⬅️ Zurück</button>
     </div>
 
     <div class="setup-section">
@@ -280,7 +279,7 @@
     <button class="start-btn" onclick="startQuizTrainer()">Training starten 🚀</button>
   </div>
 
-  <!-- 3. DER EIGENTLICHE QUIZ-TRAINER -->
+  <!-- 3. DER TRAINER -->
   <div id="quiz-screen" class="hidden">
     <div class="profile-header">
       <div>
@@ -325,7 +324,6 @@
   let selectedName = '';
   let currentSubject = 'english';
 
-  // Englisch Vokabeln (Green Line 1)
   const englishVocab = [
     { level: 0, english: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
     { level: 0, english: "Look!", german: "Schau! / Schaut mal!" },
@@ -434,7 +432,6 @@
     { level: 0, english: "alphabet", german: "Alphabet" },
     { level: 0, english: "Rap like me.", german: "Rappe/Rappt wie ich." },
     { level: 0, english: "I love you.", german: "Ich liebe dich., Ich mag dich." },
-
     { level: 1, english: "at home", german: "zu Hause" },
     { level: 1, english: "family", german: "Familie" },
     { level: 1, english: "to live", german: "wohnen, leben" },
@@ -465,7 +462,6 @@
     { level: 1, english: "to collect", german: "sammeln" },
     { level: 1, english: "new", german: "neu" },
     { level: 1, english: "small", german: "klein" },
-
     { level: 2, english: "sister", german: "Schwester" },
     { level: 2, english: "little", german: "klein" },
     { level: 2, english: "brother", german: "Bruder" },
@@ -476,4 +472,67 @@
     { level: 2, english: "only child", german: "Einzelkind" },
     { level: 2, english: "dad", german: "Papa" },
     { level: 2, english: "she's", german: "sie ist" },
-    { level: 2, english: "isn
+    { level: 2, english: "isn't (= is not)", german: "ist nicht" },
+    { level: 2, english: "always", german: "immer, ständig" },
+    { level: 2, english: "easy", german: "einfach, leicht" },
+    { level: 2, english: "he's", german: "er ist" },
+    { level: 2, english: "mum", german: "Mama" },
+    { level: 2, english: "uncle", german: "Onkel" },
+    { level: 2, english: "aunt", german: "Tante" },
+    { level: 2, english: "grandad", german: "Opa" },
+    { level: 2, english: "grandma", german: "Oma" },
+    { level: 2, english: "family tree", german: "Stammbaum" },
+    { level: 2, english: "Tell me about ...", german: "Erzähle mir von ..." },
+    { level: 2, english: "nice", german: "nett" },
+    { level: 2, english: "cool", german: "cool" },
+    { level: 2, english: "great", german: "großartig" },
+    { level: 2, english: "fun", german: "witzig" },
+    { level: 2, english: "OK", german: "in Ordnung" },
+    { level: 2, english: "crazy", german: "verrückt" },
+    { level: 2, english: "quiet", german: "ruhig" },
+    { level: 2, english: "small", german: "klein" },
+    { level: 2, english: "tall", german: "groß" },
+    { level: 2, english: "friendly", german: "freundlich" },
+    { level: 2, english: "clever", german: "schlau" },
+    { level: 2, english: "silly", german: "albern, dumm" },
+    { level: 2, english: "noisy", german: "laut" },
+    { level: 2, english: "short", german: "klein" },
+    { level: 2, english: "guinea pig", german: "Meerschweinchen" },
+    { level: 2, english: "quiet", german: "still, ruhig, leise" },
+    { level: 2, english: "language", german: "Sprache" },
+    { level: 2, english: "only", german: "erst, bloß, nur" },
+    { level: 2, english: "wrong", german: "falsch" },
+    { level: 2, english: "Thanks.", german: "Danke." },
+    { level: 2, english: "very", german: "sehr" },
+    { level: 2, english: "some", german: "einige, ein paar, etwas" },
+    { level: 2, english: "of", german: "von" },
+    { level: 2, english: "to say hello (to)", german: "grüßen, Grüße ausrichten (an)" },
+    { level: 2, english: "to", german: "zu, nach, auf, in" },
+    { level: 3, english: "problem", german: "Problem, Schwierigkeit" },
+    { level: 3, english: "there is / are", german: "da ist/sind, es gibt" },
+    { level: 3, english: "there", german: "da, dort, dahin, dorthin" },
+    { level: 3, english: "garden", german: "Garten" },
+    { level: 3, english: "behind", german: "hinter" },
+    { level: 3, english: "on the bed", german: "auf dem Bett" },
+    { level: 3, english: "under a tree", german: "unter einem Baum" },
+    { level: 3, english: "at home with Luke", german: "bei Luke zu Hause" },
+    { level: 3, english: "in front of Luke and Dave", german: "vor Luke und Dave" },
+    { level: 3, english: "next to Luke", german: "neben Luke" },
+    { level: 3, english: "in the bath", german: "in der Badewanne" },
+    { level: 3, english: "behind Pia", german: "hinter Pia" },
+    { level: 3, english: "on the left", german: "auf der linken Seite, links" },
+    { level: 3, english: "on the right", german: "auf der rechten Seite, rechts" },
+    { level: 3, english: "in the middle (of)", german: "in der Mitte (von), mitten in" },
+    { level: 3, english: "own", german: "eigene/-r/-s" },
+    { level: 3, english: "loft", german: "Dachboden" },
+    { level: 3, english: "idea", german: "Idee, Einfall" },
+    { level: 3, english: "to listen (to)", german: "zuhören, anhören" },
+    { level: 3, english: "in front of", german: "vor" },
+    { level: 3, english: "next to", german: "neben" },
+    { level: 3, english: "floor", german: "Fußboden" },
+    { level: 3, english: "again", german: "wieder, noch einmal, noch mal" },
+    { level: 3, english: "everywhere", german: "überall, überallhin" },
+    { level: 3, english: "car", german: "Auto" },
+    { level: 3, english: "now", german: "jetzt, nun" },
+    { level: 3, english: "Mrs", german: "Frau (Anrede)" },
+    { level: 3, english: "Mr",
