@@ -27,8 +27,23 @@
     }
     h1 {
       font-size: 22px;
-      margin: 0 0 15px 0;
+      margin: 0 0 10px 0;
       color: #1e293b;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #475569;
+    }
+    .credits {
+      color: #e11d48;
+      background: #ffe4e6;
+      padding: 4px 10px;
+      border-radius: 20px;
     }
     .filter-box {
       margin-bottom: 20px;
@@ -69,17 +84,11 @@
       border-radius: 12px;
       letter-spacing: 0.8px;
     }
-    .lang-en {
-      background-color: #dbeafe;
-      color: #1e40af;
-    }
-    .lang-de {
-      background-color: #fef3c7;
-      color: #92400e;
-    }
+    .lang-en { background-color: #dbeafe; color: #1e40af; }
+    .lang-de { background-color: #fef3c7; color: #92400e; }
     .word-box h2 {
       margin: 12px 0 0 0;
-      font-size: 24px;
+      font-size: 20px;
       color: #0f172a;
       word-wrap: break-word;
     }
@@ -115,7 +124,7 @@
     .mc-btn {
       width: 100%;
       padding: 12px;
-      font-size: 15px;
+      font-size: 14px;
       background-color: #f8fafc;
       color: #0f172a;
       border: 2px solid #cbd5e1;
@@ -130,17 +139,8 @@
       border-color: #2563eb;
       background-color: #eff6ff;
     }
-    .mc-btn.correct {
-      background-color: #d1fae5;
-      border-color: #10b981;
-      color: #065f46;
-      font-weight: bold;
-    }
-    .mc-btn.wrong {
-      background-color: #fee2e2;
-      border-color: #ef4444;
-      color: #991b1b;
-    }
+    .mc-btn.correct { background-color: #d1fae5; border-color: #10b981; color: #065f46; font-weight: bold; }
+    .mc-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; }
 
     .feedback {
       margin-top: 15px;
@@ -157,7 +157,7 @@
   <h1>Green Line 1 📚</h1>
 
   <div class="filter-box">
-    <label for="unit-select">Lernbereich auswählen:</label>
+    <label for="unit-select">Lernbereich auswählen (max. 25 Vokabeln):</label>
     <select id="unit-select" onchange="updateVocabPool()">
       <optgroup label="Einzelne Abschnitte lernen">
         <option value="single_0">Nur Pick-up A: I'm from Greenwich</option>
@@ -176,7 +176,11 @@
   </div>
   
   <div id="quiz-area">
-    <p id="progress" style="color: #64748b; font-size: 13px; margin: 0;"></p>
+    <div class="top-bar">
+      <span id="progress">Frage 1 von 25</span>
+      <span id="credits-display" class="credits">❤️ Credits: 4</span>
+    </div>
+
     <div class="word-box">
       <span id="lang-label" class="lang-badge lang-en">Englisch</span>
       <h2 id="prompt-word"></h2>
@@ -194,15 +198,14 @@
   </div>
 
   <div id="result-area" class="hidden">
-    <h2>Geschafft! 🏆</h2>
+    <h2 id="result-title">Geschafft! 🏆</h2>
     <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
-    <button class="action-btn" onclick="updateVocabPool()">Nochmal mischen & lernen</button>
+    <button class="action-btn" onclick="updateVocabPool()">Nochmal lernen</button>
   </div>
 </div>
 
 <script>
   const allVocab = [
-    // Level 0: Pick-up A
     { level: 0, english: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
     { level: 0, english: "Look!", german: "Schau! / Schaut mal!" },
     { level: 0, english: "two boys and a dog", german: "zwei Jungen und ein Hund" },
@@ -311,7 +314,6 @@
     { level: 0, english: "Rap like me.", german: "Rappe/Rappt wie ich." },
     { level: 0, english: "I love you.", german: "Ich liebe dich., Ich mag dich." },
 
-    // Level 1: Unit 1 Check-in
     { level: 1, english: "at home", german: "zu Hause" },
     { level: 1, english: "family", german: "Familie" },
     { level: 1, english: "to live", german: "wohnen, leben" },
@@ -343,7 +345,6 @@
     { level: 1, english: "new", german: "neu" },
     { level: 1, english: "small", german: "klein" },
 
-    // Level 2: Unit 1 Station 1
     { level: 2, english: "sister", german: "Schwester" },
     { level: 2, english: "little", german: "klein" },
     { level: 2, english: "brother", german: "Bruder" },
@@ -391,284 +392,9 @@
     { level: 2, english: "to say hello (to)", german: "grüßen, Grüße ausrichten (an)" },
     { level: 2, english: "to", german: "zu, nach, auf, in" },
 
-    // Level 3: Unit 1 Station 2
     { level: 3, english: "problem", german: "Problem, Schwierigkeit" },
     { level: 3, english: "there is / are", german: "da ist/sind, es gibt" },
     { level: 3, english: "there", german: "da, dort, dahin, dorthin" },
     { level: 3, english: "garden", german: "Garten" },
     { level: 3, english: "behind", german: "hinter" },
-    { level: 3, english: "on the bed", german: "auf dem Bett" },
-    { level: 3, english: "under a tree", german: "unter einem Baum" },
-    { level: 3, english: "at home with Luke", german: "bei Luke zu Hause" },
-    { level: 3, english: "in front of Luke and Dave", german: "vor Luke und Dave" },
-    { level: 3, english: "next to Luke", german: "neben Luke" },
-    { level: 3, english: "in the bath", german: "in der Badewanne" },
-    { level: 3, english: "behind Pia", german: "hinter Pia" },
-    { level: 3, english: "on the left", german: "auf der linken Seite, links" },
-    { level: 3, english: "on the right", german: "auf der rechten Seite, rechts" },
-    { level: 3, english: "in the middle (of)", german: "in der Mitte (von), mitten in" },
-    { level: 3, english: "own", german: "eigene/-r/-s" },
-    { level: 3, english: "loft", german: "Dachboden" },
-    { level: 3, english: "idea", german: "Idee, Einfall" },
-    { level: 3, english: "to listen (to)", german: "zuhören, anhören" },
-    { level: 3, english: "in front of", german: "vor" },
-    { level: 3, english: "next to", german: "neben" },
-    { level: 3, english: "floor", german: "Fußboden" },
-    { level: 3, english: "again", german: "wieder, noch einmal, noch mal" },
-    { level: 3, english: "everywhere", german: "überall, überallhin" },
-    { level: 3, english: "car", german: "Auto" },
-    { level: 3, english: "now", german: "jetzt, nun" },
-    { level: 3, english: "Mrs", german: "Frau (Anrede)" },
-    { level: 3, english: "Mr", german: "Herr (Anrede)" },
-    { level: 3, english: "my", german: "mein/e" },
-    { level: 3, english: "your", german: "dein/e, euer/eure" },
-    { level: 3, english: "his", german: "sein/e" },
-    { level: 3, english: "her", german: "ihr/e" },
-    { level: 3, english: "its", german: "sein/e, ihr/e" },
-    { level: 3, english: "our", german: "unser/e" },
-    { level: 3, english: "their", german: "ihr/e" },
-    { level: 3, english: "I", german: "ich" },
-    { level: 3, english: "you", german: "du, ihr, Sie" },
-    { level: 3, english: "he", german: "er" },
-    { level: 3, english: "she", german: "sie" },
-    { level: 3, english: "it", german: "es" },
-    { level: 3, english: "we", german: "wir" },
-    { level: 3, english: "they", german: "sie" },
-    { level: 3, english: "to remember", german: "sich erinnern (an), sich merken, denken an" },
-    { level: 3, english: "or", german: "oder" },
-    { level: 3, english: "more", german: "mehr, weitere" },
-
-    // Level 4: Unit 1 Story, Check-out & Unit task
-    { level: 4, english: "its", german: "sein/-e, ihr/-e" },
-    { level: 4, english: "address", german: "Adresse" },
-    { level: 4, english: "fridge", german: "Kühlschrank" },
-    { level: 4, english: "wall", german: "Wand, Mauer" },
-    { level: 4, english: "answer", german: "Antwort" },
-    { level: 4, english: "thirteen", german: "dreizehn" },
-    { level: 4, english: "fourteen", german: "vierzehn" },
-    { level: 4, english: "fifteen", german: "fünfzehn" },
-    { level: 4, english: "sixteen", german: "sechzehn" },
-    { level: 4, english: "seventeen", german: "siebzehn" },
-    { level: 4, english: "eighteen", german: "achtzehn" },
-    { level: 4, english: "nineteen", german: "neunzehn" },
-    { level: 4, english: "twenty", german: "zwanzig" },
-    { level: 4, english: "twenty-one", german: "einundzwanzig" },
-    { level: 4, english: "thirty", german: "dreißig" },
-    { level: 4, english: "forty", german: "vierzig" },
-    { level: 4, english: "fifty", german: "fünfzig" },
-    { level: 4, english: "sixty", german: "sechzig" },
-    { level: 4, english: "seventy", german: "siebzig" },
-    { level: 4, english: "eighty", german: "achtzig" },
-    { level: 4, english: "ninety", german: "neunzig" },
-    { level: 4, english: "a/one hundred", german: "hundert, einhundert" },
-    { level: 4, english: "from ... to", german: "von ... bis" },
-    { level: 4, english: "mirror", german: "Spiegel" },
-    { level: 4, english: "lamp", german: "Lampe" },
-    { level: 4, english: "poster", german: "Poster" },
-    { level: 4, english: "guitar", german: "Gitarre" },
-    { level: 4, english: "skateboard", german: "Skateboard" },
-    { level: 4, english: "rug", german: "Teppich, Vorleger" },
-    { level: 4, english: "shelf (pl. shelves)", german: "Regal" },
-    { level: 4, english: "computer", german: "Computer" },
-    { level: 4, english: "cuddly toy", german: "Stofftier" },
-    { level: 4, english: "toy", german: "Spielzeug" },
-    { level: 4, english: "busy", german: "belebt, beschäftigt" },
-    { level: 4, english: "Who ... for?", german: "Für wen ...?" },
-    { level: 4, english: "who", german: "wer, wem, wen" },
-    { level: 4, english: "to explore", german: "auf Entdeckungsreise gehen, sich umschauen, erkunden, erforschen" },
-    { level: 4, english: "best", german: "beste/-r/-s" },
-    { level: 4, english: "bag", german: "Tasche, Tüte" },
-    { level: 4, english: "maybe", german: "vielleicht" },
-    { level: 4, english: "after", german: "nach (zeitlich)" },
-    { level: 4, english: "visit", german: "Besuch" },
-    { level: 4, english: "outside", german: "nach draußen, draußen, außerhalb (von)" },
-    { level: 4, english: "awful", german: "schrecklich, furchtbar" },
-    { level: 4, english: "Don't worry!", german: "Keine Sorge!" },
-    { level: 4, english: "sentence", german: "Satz" },
-    { level: 4, english: "right", german: "richtig, korrekt" },
-    { level: 4, english: "ending", german: "Ende, Schluss (einer Geschichte)" },
-    { level: 4, english: "to talk about", german: "sprechen über, erzählen von" },
-    { level: 4, english: "roof", german: "Dach" },
-    { level: 4, english: "window", german: "Fenster" },
-    { level: 4, english: "loft", german: "Dachboden" },
-    { level: 4, english: "hall", german: "Flur" },
-    { level: 4, english: "cellar", german: "Keller" },
-    { level: 4, english: "terrace", german: "Terrasse" },
-    { level: 4, english: "balcony", german: "Balkon" },
-    { level: 4, english: "garage", german: "Garage" },
-    { level: 4, english: "shed", german: "Schuppen" },
-    { level: 4, english: "step", german: "Stufe, Schritt" },
-    { level: 4, english: "to draw", german: "zeichnen" },
-    { level: 4, english: "fantasy", german: "Fantasie, Traum-" }
-  ];
-
-  let activeVocabList = [];
-  let currentIndex = 0;
-  let score = 0;
-  let isEnToDe = true;
-  let isMcMode = false;
-
-  const unitSelect = document.getElementById('unit-select');
-  const progressEl = document.getElementById('progress');
-  const langLabelEl = document.getElementById('lang-label');
-  const promptWordEl = document.getElementById('prompt-word');
-  const typeArea = document.getElementById('type-area');
-  const mcArea = document.getElementById('mc-area');
-  const inputEl = document.getElementById('answer-input');
-  const checkBtn = document.getElementById('check-btn');
-  const nextBtn = document.getElementById('next-btn');
-  const feedbackEl = document.getElementById('feedback');
-
-  function updateVocabPool() {
-    const selection = unitSelect.value;
-    const [type, levelStr] = selection.split('_');
-    const targetLevel = parseInt(levelStr, 10);
-
-    if (type === 'single') {
-      activeVocabList = allVocab.filter(v => v.level === targetLevel);
-    } else {
-      activeVocabList = allVocab.filter(v => v.level <= targetLevel);
-    }
-
-    activeVocabList.sort(() => Math.random() - 0.5);
-    restartQuiz();
-  }
-
-  function loadWord() {
-    const current = activeVocabList[currentIndex];
-    progressEl.textContent = `Frage ${currentIndex + 1} von ${activeVocabList.length}`;
-    feedbackEl.textContent = '';
-    nextBtn.classList.add('hidden');
-
-    // Zufällige Richtung: Englisch <-> Deutsch
-    isEnToDe = Math.random() < 0.5;
-    // Zufälliger Modus: Texteingabe <-> Multiple Choice
-    isMcMode = Math.random() < 0.5;
-
-    const questionText = isEnToDe ? current.english : current.german;
-    const expectedAnswer = isEnToDe ? current.german : current.english;
-
-    if (isEnToDe) {
-      langLabelEl.textContent = 'Englisch';
-      langLabelEl.className = 'lang-badge lang-en';
-      inputEl.placeholder = 'Deutsche Übersetzung...';
-    } else {
-      langLabelEl.textContent = 'Deutsch';
-      langLabelEl.className = 'lang-badge lang-de';
-      inputEl.placeholder = 'Englische Übersetzung...';
-    }
-
-    promptWordEl.textContent = questionText;
-
-    if (!isMcMode) {
-      typeArea.classList.remove('hidden');
-      mcArea.classList.add('hidden');
-      inputEl.value = '';
-      inputEl.disabled = false;
-      checkBtn.classList.remove('hidden');
-      inputEl.focus();
-    } else {
-      typeArea.classList.add('hidden');
-      mcArea.classList.remove('hidden');
-      generateMultipleChoice(expectedAnswer);
-    }
-  }
-
-  function generateMultipleChoice(correctAnswer) {
-    mcArea.innerHTML = '';
-    
-    const wrongOptions = allVocab
-      .map(item => isEnToDe ? item.german : item.english)
-      .filter(word => word !== correctAnswer);
-    
-    const uniqueWrong = [...new Set(wrongOptions)];
-    uniqueWrong.sort(() => Math.random() - 0.5);
-    
-    const selectedOptions = [correctAnswer, ...uniqueWrong.slice(0, 2)];
-    selectedOptions.sort(() => Math.random() - 0.5);
-
-    selectedOptions.forEach(option => {
-      const btn = document.createElement('button');
-      btn.className = 'mc-btn';
-      btn.textContent = option;
-      btn.onclick = () => checkMcAnswer(btn, option, correctAnswer);
-      mcArea.appendChild(btn);
-    });
-  }
-
-  function checkMcAnswer(clickedBtn, selectedOption, correctAnswer) {
-    const allButtons = mcArea.querySelectorAll('.mc-btn');
-    allButtons.forEach(btn => {
-      btn.disabled = true;
-      if (btn.textContent === correctAnswer) {
-        btn.classList.add('correct');
-      }
-    });
-
-    if (selectedOption === correctAnswer) {
-      feedbackEl.textContent = 'Richtig! 🎉';
-      feedbackEl.style.color = '#10b981';
-      score++;
-    } else {
-      clickedBtn.classList.add('wrong');
-      feedbackEl.textContent = `Falsch! Richtig ist: "${correctAnswer}"`;
-      feedbackEl.style.color = '#ef4444';
-    }
-
-    nextBtn.classList.remove('hidden');
-  }
-
-  function checkTypedAnswer() {
-    const userAnswer = inputEl.value.trim().toLowerCase();
-    const originalCorrect = isEnToDe ? activeVocabList[currentIndex].german : activeVocabList[currentIndex].english;
-    const correctAnswerLower = originalCorrect.toLowerCase();
-    
-    if (userAnswer === '') return;
-
-    inputEl.disabled = true;
-    checkBtn.classList.add('hidden');
-    nextBtn.classList.remove('hidden');
-
-    const possibleAnswers = correctAnswerLower.split(/[,/]/).map(s => s.trim());
-    const isCorrect = userAnswer === correctAnswerLower || possibleAnswers.includes(userAnswer);
-
-    if (isCorrect) {
-      feedbackEl.textContent = 'Richtig! 🎉';
-      feedbackEl.style.color = '#10b981';
-      score++;
-    } else {
-      feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
-      feedbackEl.style.color = '#ef4444';
-    }
-  }
-
-  function nextWord() {
-    currentIndex++;
-    if (currentIndex < activeVocabList.length) {
-      loadWord();
-    } else {
-      document.getElementById('quiz-area').classList.add('hidden');
-      document.getElementById('result-area').classList.remove('hidden');
-      document.getElementById('score-text').textContent = `Du hast ${score} von ${activeVocabList.length} Vokabeln richtig gewusst!`;
-    }
-  }
-
-  function restartQuiz() {
-    currentIndex = 0;
-    score = 0;
-    document.getElementById('result-area').classList.add('hidden');
-    document.getElementById('quiz-area').classList.remove('hidden');
-    loadWord();
-  }
-
-  inputEl.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !isMcMode && !checkBtn.classList.contains('hidden')) {
-      checkTypedAnswer();
-    }
-  });
-
-  updateVocabPool();
-</script>
-
-</body>
-</html>
+    {
