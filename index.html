@@ -626,9 +626,10 @@
     feedbackEl.textContent = '';
     nextBtn.classList.add('hidden');
 
-    isDeToEn = Math.random() < 0.6;
+    // 80% Deutsch -> Englisch, 20% Englisch -> Deutsch
+    isDeToEn = Math.random() < 0.80;
     
-    // Nur noch 10% Chance für Multiple Choice bei einfachen Wörtern (Sätze weiterhin immer MC)
+    // 10% Chance für Multiple Choice bei einfachen Wörtern (Sätze weiterhin immer MC)
     if (isSimpleSingleWord(current)) {
       isMcMode = Math.random() < 0.10; 
     } else {
