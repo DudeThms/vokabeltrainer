@@ -255,7 +255,7 @@
     { level: 0, english: "school", german: "Schule" },
     { level: 0, english: "Greenwich Park is big.", german: "Der Greenwich Park ist groß." },
     { level: 0, english: "It's great for cycling.", german: "Er ist super zum Radfahren." },
-    { level: 0, english: "I don't like cycling.", german: "Ich fahre nicht gern Rad." },
+    { level: 0, english: "I don't like cycling.", german: "I fahre nicht gern Rad." },
     { level: 0, english: "My favourite sport is football.", german: "Mein Lieblingssport ist Fußball." },
     { level: 0, english: "I like the boating lake.", german: "Ich mag den See mit den Booten., Mir gefällt der See mit den Booten." },
     { level: 0, english: "What's that?", german: "Was ist das?" },
@@ -596,7 +596,8 @@
     }
 
     pool.sort(() => Math.random() - 0.5);
-    activeVocabList = pool.slice(0, 25);
+    // Wir klonen das Objekt, damit wir eine Eigenschaft "nearMissCount" für die Wiederholung anhängen können
+    activeVocabList = pool.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
 
     restartQuiz();
   }
@@ -629,7 +630,6 @@
     // 80% Deutsch -> Englisch, 20% Englisch -> Deutsch
     isDeToEn = Math.random() < 0.80;
     
-    // 10% Chance für Multiple Choice bei einfachen Wörtern (Sätze weiterhin immer MC)
     if (isSimpleSingleWord(current)) {
       isMcMode = Math.random() < 0.10; 
     } else {
@@ -722,7 +722,8 @@
 
   function checkTypedAnswer() {
     const userAnswer = inputEl.value.trim().toLowerCase();
-    const originalCorrect = isDeToEn ? activeVocabList[currentIndex].english : activeVocabList[currentIndex].german;
+    const currentVocab = activeVocabList[currentIndex];
+    const originalCorrect = isDeToEn ? currentVocab.english : currentVocab.german;
     
     if (userAnswer === '') return;
 
@@ -743,11 +744,28 @@
       score++;
       nextBtn.classList.remove('hidden');
     } else if (isNearMatch) {
-      feedbackEl.textContent = `Fast richtig! ✍️ (Richtig: "${originalCorrect}")`;
-      feedbackEl.style.color = '#d97706';
-      score++;
-      nextBtn.classList.remove('hidden');
+      if (currentVocab.nearMissCount === 0) {
+        // 1. Tippfehler: Kein Credit Abzug, Hinweis ausgeben, Vokabel hinten anstellen zur Wiederholung
+        currentVocab.nearMissCount = 1;
+        activeVocabList.push({ ...currentVocab }); // am Ende nochmal einreihen
+        feedbackEl.textContent = `Fast richtig! ✍️ (Richtig: "${originalCorrect}"). Wir üben das gleich noch mal!`;
+        feedbackEl.style.color = '#d97706';
+        nextBtn.classList.remove('hidden');
+      } else {
+        // 2. Fehler beim Wiederholen: Jetzt Credit abziehen!
+        credits--;
+        updateCreditsDisplay();
+        feedbackEl.textContent = `Schon wieder ein Tippfehler! ❌ (Richtig wäre: "${originalCorrect}")`;
+        feedbackEl.style.color = '#ef4444';
+        
+        if (credits <= 0) {
+          setTimeout(() => endGame(false), 1500);
+        } else {
+          nextBtn.classList.remove('hidden');
+        }
+      }
     } else {
+      // Kompletter Fehler (kein leichter Tippfehler): Sofort Credit abziehen
       credits--;
       updateCreditsDisplay();
       feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
@@ -779,7 +797,7 @@
 
     if (success) {
       titleEl.textContent = "Geschafft! 🏆";
-      scoreTextEl.textContent = `Super! Du hast ${score} von ${activeVocabList.length} Vokabeln richtig geschafft und noch ${credits} Credit(s) übrig!`;
+      scoreTextEl.textContent = `Super! Du hast den Durchgang mit ${credits} verbleibenden Credit(s) beendet!`;
     } else {
       titleEl.textContent = "Game Over ❌";
       scoreTextEl.textContent = `Keine Credits mehr übrig! Du bist bei Frage ${currentIndex + 1} ausgeschieden. Versuch es noch einmal!`;
