@@ -144,7 +144,11 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .action-btn:hover { background-color: #1d4ed8; }
+    .action-btn:hover:not(:disabled) { background-color: #1d4ed8; }
+    .action-btn:disabled {
+      background-color: #94a3b8;
+      cursor: wait;
+    }
     .btn-next { background-color: #10b981; margin-top: 10px; }
     .btn-next:hover { background-color: #059669; }
     
@@ -272,7 +276,7 @@
     <select id="unit-select">
       <!-- Wird dynamisch per JS befüllt -->
     </select>
-    <button class="action-btn" onclick="startApp()">Starten 🚀</button>
+    <button id="start-btn" class="action-btn" onclick="startApp()">Starten 🚀</button>
   </div>
 
   <!-- Lernmodus-Ansicht -->
@@ -342,262 +346,10 @@
 </div>
 
 <script>
-  // --- ENGLISCH WORTSCHATZ (Green Line 1) ---
-  const englishVocab = [
-    // --- Pick-up A & B ---
-    { unit: "pu", sub: "pu_ab", foreign: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
-    { unit: "pu", sub: "pu_ab", foreign: "mouse", german: "Maus" },
-    { unit: "pu", sub: "pu_ab", foreign: "dog", german: "Hund" },
-    { unit: "pu", sub: "pu_ab", foreign: "cat", german: "Katze" },
-    { unit: "pu", sub: "pu_ab", foreign: "horse", german: "Pferd" },
-    { unit: "pu", sub: "pu_ab", foreign: "family", german: "Familie" },
-    { unit: "pu", sub: "pu_ab", foreign: "house", german: "Haus" },
-    { unit: "pu", sub: "pu_ab", foreign: "school", german: "Schule" },
-    { unit: "pu", sub: "pu_ab", foreign: "day", german: "Tag" },
-    { unit: "pu", sub: "pu_ab", foreign: "happy", german: "glücklich, froh, fröhlich" },
-    { unit: "pu", sub: "pu_ab", foreign: "can't", german: "kann nicht, können nicht" },
-    { unit: "pu", sub: "pu_ab", foreign: "to meet", german: "treffen, sich treffen" },
-    { unit: "pu", sub: "pu_ab", foreign: "to show", german: "zeigen" },
-    { unit: "pu", sub: "pu_ab", foreign: "sport / PE (Physical Education)", german: "Sport" },
-    { unit: "pu", sub: "pu_ab", foreign: "want", german: "wollen, mögen" },
-    { unit: "pu", sub: "pu_ab", foreign: "boring", german: "langweilig" },
-    { unit: "pu", sub: "pu_ab", foreign: "to play", german: "spielen" },
-    { unit: "pu", sub: "pu_ab", foreign: "fast", german: "schnell" },
-    { unit: "pu", sub: "pu_ab", foreign: "I'm sorry!", german: "Tut mir leid!" },
-    { unit: "pu", sub: "pu_ab", foreign: "Mr", german: "Herr (Anrede)" },
-    { unit: "pu", sub: "pu_ab", foreign: "cute", german: "niedlich, süß" },
-    { unit: "pu", sub: "pu_ab", foreign: "lucky charm", german: "Glücksbringer, Talisman" },
-    { unit: "pu", sub: "pu_ab", foreign: "text message", german: "SMS, Kurznachricht" },
-    { unit: "pu", sub: "pu_ab", foreign: "reading", german: "Lesen" },
-    { unit: "pu", sub: "pu_ab", foreign: "mask", german: "Maske" },
-    { unit: "pu", sub: "pu_ab", foreign: "to paint", german: "anmalen, malen" },
-    { unit: "pu", sub: "pu_ab", foreign: "to go swimming", german: "schwimmen gehen" },
-    { unit: "pu", sub: "pu_ab", foreign: "book", german: "Buch" },
-    { unit: "pu", sub: "pu_ab", foreign: "card", german: "Karte, Spielkarte" },
-    { unit: "pu", sub: "pu_ab", foreign: "magazine", german: "Zeitschrift, Magazin" },
-    { unit: "pu", sub: "pu_ab", foreign: "Me too.", german: "Ich auch." },
-    { unit: "pu", sub: "pu_ab", foreign: "DVD", german: "DVD" },
-    { unit: "pu", sub: "pu_ab", foreign: "bike", german: "Fahrrad" },
-    { unit: "pu", sub: "pu_ab", foreign: "silly", german: "dumm, doof, albern" },
+  // Leere Speicher für die extern geladenen Wortschätze
+  let englishVocab = [];
+  let latinVocab = [];
 
-    // --- Unit 1 ---
-    { unit: "unit1", sub: "u1_chk", foreign: "at home", german: "zu Hause" },
-    { unit: "unit1", sub: "u1_chk", foreign: "family", german: "Familie" },
-    { unit: "unit1", sub: "u1_chk", foreign: "to live", german: "wohnen, leben" },
-    { unit: "unit1", sub: "u1_chk", foreign: "flat", german: "Wohnung" },
-    { unit: "unit1", sub: "u1_chk", foreign: "house", german: "Haus" },
-    { unit: "unit1", sub: "u1_chk", foreign: "door", german: "Tür" },
-    { unit: "unit1", sub: "u1_chk", foreign: "chair", german: "Stuhl, Sessel" },
-    { unit: "unit1", sub: "u1_chk", foreign: "table", german: "Tisch" },
-    { unit: "unit1", sub: "u1_chk", foreign: "kitchen", german: "Küche" },
-    { unit: "unit1", sub: "u1_chk", foreign: "living room", german: "Wohnzimmer" },
-    { unit: "unit1", sub: "u1_chk", foreign: "bathroom", german: "Badezimmer" },
-
-    { unit: "unit1", sub: "u1_st1", foreign: "sister", german: "Schwester" },
-    { unit: "unit1", sub: "u1_st1", foreign: "brother", german: "Bruder" },
-    { unit: "unit1", sub: "u1_st1", foreign: "father", german: "Vater" },
-    { unit: "unit1", sub: "u1_st1", foreign: "mother", german: "Mutter" },
-    { unit: "unit1", sub: "u1_st1", foreign: "cousin", german: "Cousin, Cousine" },
-    { unit: "unit1", sub: "u1_st1", foreign: "uncle", german: "Onkel" },
-    { unit: "unit1", sub: "u1_st1", foreign: "aunt", german: "Tante" },
-    { unit: "unit1", sub: "u1_st1", foreign: "grandad", german: "Opa" },
-    { unit: "unit1", sub: "u1_st1", foreign: "grandma / granny", german: "Oma" },
-    { unit: "unit1", sub: "u1_st1", foreign: "nice", german: "nett" },
-    { unit: "unit1", sub: "u1_st1", foreign: "cool", german: "cool" },
-
-    { unit: "unit1", sub: "u1_st2", foreign: "problem", german: "Problem, Schwierigkeit" },
-    { unit: "unit1", sub: "u1_st2", foreign: "garden", german: "Garten" },
-    { unit: "unit1", sub: "u1_st2", foreign: "behind", german: "hinter" },
-    { unit: "unit1", sub: "u1_st2", foreign: "in front of / before", german: "vor" },
-    { unit: "unit1", sub: "u1_st2", foreign: "next to", german: "neben" },
-    { unit: "unit1", sub: "u1_st2", foreign: "loft", german: "Dachboden" },
-    { unit: "unit1", sub: "u1_st2", foreign: "idea", german: "Idee, Einfall" },
-    { unit: "unit1", sub: "u1_st2", foreign: "car", german: "Auto" },
-
-    { unit: "unit1", sub: "u1_sty", foreign: "address", german: "Adresse" },
-    { unit: "unit1", sub: "u1_sty", foreign: "fridge", german: "Kühlschrank" },
-    { unit: "unit1", sub: "u1_sty", foreign: "wall", german: "Wand, Mauer" },
-    { unit: "unit1", sub: "u1_sty", foreign: "answer", german: "Antwort" },
-    { unit: "unit1", sub: "u1_sty", foreign: "mirror", german: "Spiegel" },
-    { unit: "unit1", sub: "u1_sty", foreign: "lamp", german: "Lampe" },
-    { unit: "unit1", sub: "u1_sty", foreign: "poster", german: "Poster" },
-    { unit: "unit1", sub: "u1_sty", foreign: "guitar", german: "Gitarre" },
-    { unit: "unit1", sub: "u1_sty", foreign: "skateboard", german: "Skateboard" },
-    { unit: "unit1", sub: "u1_sty", foreign: "computer", german: "Computer" },
-
-    // --- Unit 2 ---
-    { unit: "unit2", sub: "u2_chk", foreign: "pen", german: "Kugelschreiber, Kuli" },
-    { unit: "unit2", sub: "u2_chk", foreign: "pencil", german: "Bleistift" },
-    { unit: "unit2", sub: "u2_chk", foreign: "pencil case", german: "Federmäppchen, Mäppchen" },
-    { unit: "unit2", sub: "u2_chk", foreign: "exercise book", german: "Übungsheft" },
-    { unit: "unit2", sub: "u2_chk", foreign: "rubber", german: "Radiergummi" },
-    { unit: "unit2", sub: "u2_chk", foreign: "uniform", german: "Schuluniform" },
-    { unit: "unit2", sub: "u2_chk", foreign: "recording studio", german: "Tonstudio, Aufnahmestudio" },
-    { unit: "unit2", sub: "u2_chk", foreign: "classroom", german: "Klassenzimmer" },
-    { unit: "unit2", sub: "u2_chk", foreign: "tutor", german: "Klassenlehrer/in" },
-    { unit: "unit2", sub: "u2_chk", foreign: "question", german: "Frage" },
-    
-    { unit: "unit2", sub: "u2_st1", foreign: "schoolbag", german: "Schulranzen, Schultasche" },
-    { unit: "unit2", sub: "u2_st1", foreign: "tutor group", german: "Klasse (bei einer empfohlenen Tutor-Gruppe)" },
-    { unit: "unit2", sub: "u2_st1", foreign: "everyone", german: "alle, jeder" },
-    { unit: "unit2", sub: "u2_st1", foreign: "student", german: "Schüler/in, Student/in" },
-    { unit: "unit2", sub: "u2_st1", foreign: "to call", german: "nennen" },
-    { unit: "unit2", sub: "u2_st1", foreign: "him", german: "ihn" },
-    { unit: "unit2", sub: "u2_st1", foreign: "no", german: "nein" },
-    { unit: "unit2", sub: "u2_st1", foreign: "to sing", german: "singen" },
-    { unit: "unit2", sub: "u2_st1", foreign: "to dance", german: "tanzen" },
-    { unit: "unit2", sub: "u2_st1", foreign: "project", german: "Projekt" },
-    { unit: "unit2", sub: "u2_st1", foreign: "something", german: "etwas" },
-    { unit: "unit2", sub: "u2_st1", foreign: "Wait and see!", german: "Warte ab!" },
-    
-    { unit: "unit2", sub: "u2_st2", foreign: "teacher", german: "Lehrer/in" },
-    { unit: "unit2", sub: "u2_st2", foreign: "board", german: "Tafel" },
-    { unit: "unit2", sub: "u2_st2", foreign: "group", german: "Gruppe" },
-    { unit: "unit2", sub: "u2_st2", foreign: "office", german: "Büro" },
-    { unit: "unit2", sub: "u2_st2", foreign: "grandparents", german: "Großeltern" },
-    { unit: "unit2", sub: "u2_st2", foreign: "talent show", german: "Talentshow" },
-    { unit: "unit2", sub: "u2_st2", foreign: "restaurant", german: "Restaurant, Gaststätte" },
-    { unit: "unit2", sub: "u2_st2", foreign: "pocket money", german: "Taschengeld" },
-    { unit: "unit2", sub: "u2_st2", foreign: "to use", german: "benutzen, verwenden, gebrauchen" },
-    { unit: "unit2", sub: "u2_st2", foreign: "building", german: "Gebäude" },
-    { unit: "unit2", sub: "u2_st2", foreign: "lesson", german: "Unterrichtsstunde, Schulstunde" },
-    { unit: "unit2", sub: "u2_st2", foreign: "Art", german: "Kunst" },
-    { unit: "unit2", sub: "u2_st2", foreign: "English", german: "Englisch" },
-    { unit: "unit2", sub: "u2_st2", foreign: "German", german: "Deutsch" },
-    { unit: "unit2", sub: "u2_st2", foreign: "Geography", german: "Erdkunde" },
-    { unit: "unit2", sub: "u2_st2", foreign: "Maths", german: "Mathematik" },
-    { unit: "unit2", sub: "u2_st2", foreign: "Science", german: "Naturwissenschaften" },
-    { unit: "unit2", sub: "u2_st2", foreign: "Music", german: "Musik" },
-    { unit: "unit2", sub: "u2_st2", foreign: "Latin", german: "Latein" },
-    { unit: "unit2", sub: "u2_st2", foreign: "French", german: "Französisch" },
-    { unit: "unit2", sub: "u2_st2", foreign: "History", german: "Geschichte" },
-    { unit: "unit2", sub: "u2_st2", foreign: "PE (Physical Education) / sport", german: "Sport" },
-    { unit: "unit2", sub: "u2_st2", foreign: "RE (Religious Education)", german: "Religion" },
-    { unit: "unit2", sub: "u2_st2", foreign: "to stare", german: "anstarren" },
-    { unit: "unit2", sub: "u2_st2", foreign: "rude", german: "unhöflich, unverschämt" },
-    
-    { unit: "unit2", sub: "u2_sty", foreign: "funny", german: "lustig, witzig" },
-    { unit: "unit2", sub: "u2_sty", foreign: "lunch break", german: "Mittagspause" },
-    { unit: "unit2", sub: "u2_sty", foreign: "mum", german: "Mama" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to forget", german: "vergessen" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to do", german: "machen, tun" },
-    { unit: "unit2", sub: "u2_sty", foreign: "alone", german: "allein, alleine" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to bring", german: "bringen, mitbringen" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to wear", german: "tragen (Kleidung)" },
-    { unit: "unit2", sub: "u2_sty", foreign: "homework", german: "Hausaufgaben" },
-    { unit: "unit2", sub: "u2_sty", foreign: "already", german: "schon, bereits" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to add", german: "hinzufügen, ergänzen" },
-    { unit: "unit2", sub: "u2_sty", foreign: "end", german: "Ende, Schluss" },
-    { unit: "unit2", sub: "u2_sty", foreign: "these", german: "diese (Plural)" },
-    { unit: "unit2", sub: "u2_sty", foreign: "that", german: "jene/r/s" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to find", german: "finden, herausfinden" },
-    { unit: "unit2", sub: "u2_sty", foreign: "place", german: "Ort, Seite, Platz" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to learn", german: "lernen" },
-    { unit: "unit2", sub: "u2_sty", foreign: "week", german: "Woche" },
-    { unit: "unit2", sub: "u2_sty", foreign: "before / in front of", german: "vor" },
-    { unit: "unit2", sub: "u2_sty", foreign: "to work", german: "arbeiten" },
-    { unit: "unit2", sub: "u2_sty", foreign: "pair", german: "Paar" },
-    { unit: "unit2", sub: "u2_sty", foreign: "presentation", german: "Präsentation, Vortrag" },
-    { unit: "unit2", sub: "u2_sty", foreign: "recording", german: "Aufnahme, Aufzeichnung" },
-    { unit: "unit2", sub: "u2_sty", foreign: "poem", german: "Gedicht" },
-    { unit: "unit2", sub: "u2_sty", foreign: "sure", german: "sicher" },
-    { unit: "unit2", sub: "u2_sty", foreign: "voice", german: "Stimme" },
-    { unit: "unit2", sub: "u2_sty", foreign: "next", german: "nächste/r/s" },
-    { unit: "unit2", sub: "u2_sty", foreign: "popular", german: "beliebt, populär" },
-    { unit: "unit2", sub: "u2_sty", foreign: "kind", german: "Klasse, Schulklasse" },
-    { unit: "unit2", sub: "u2_sty", foreign: "castle", german: "Schloss, Burg" },
-    { unit: "unit2", sub: "u2_sty", foreign: "flag", german: "Fahne, Flagge" },
-    { unit: "unit2", sub: "u2_sty", foreign: "beach", german: "Strand" },
-    { unit: "unit2", sub: "u2_sty", foreign: "sea", german: "Meer" },
-    { unit: "unit2", sub: "u2_sty", foreign: "mountain", german: "Berg" },
-    { unit: "unit2", sub: "u2_sty", foreign: "forest", german: "Wald" },
-
-    // --- Unit 3 ---
-    { unit: "unit3", sub: "u3_chk", foreign: "cheese", german: "Käse" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Monday", german: "Montag" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Tuesday", german: "Dienstag" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Wednesday", german: "Mittwoch" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Thursday", german: "Donnerstag" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Friday", german: "Freitag" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Saturday", german: "Samstag" },
-    { unit: "unit3", sub: "u3_chk", foreign: "Sunday", german: "Sonntag" },
-    
-    { unit: "unit3", sub: "u3_st1", foreign: "breakfast", german: "Frühstück" },
-    { unit: "unit3", sub: "u3_st1", foreign: "to get up / to stand up", german: "aufstehen" },
-    { unit: "unit3", sub: "u3_st1", foreign: "every", german: "jeden, jede, jedes" },
-    { unit: "unit3", sub: "u3_st1", foreign: "dinner", german: "Abendessen" },
-    
-    { unit: "unit3", sub: "u3_st2", foreign: "tired", german: "müde" },
-    { unit: "unit3", sub: "u3_st2", foreign: "to look for", german: "suchen nach" },
-    { unit: "unit3", sub: "u3_st2", foreign: "roommate", german: "Zimmergenosse/Zimmergenossin" },
-    { unit: "unit3", sub: "u3_st2", foreign: "to snore", german: "schnarchen" },
-    
-    { unit: "unit3", sub: "u3_sty", foreign: "coach", german: "Trainer/in" },
-    { unit: "unit3", sub: "u3_sty", foreign: "tomorrow", german: "morgen" },
-    { unit: "unit3", sub: "u3_sty", foreign: "to look after", german: "aufpassen auf, sich kümmern um" },
-    { unit: "unit3", sub: "u3_sty", foreign: "granny / grandma", german: "Oma" },
-    { unit: "unit3", sub: "u3_sty", foreign: "mouth", german: "Mund" },
-    { unit: "unit3", sub: "u3_sty", foreign: "sound", german: "Geräusch, Klang" },
-
-    // --- Unit 4 ---
-    { unit: "unit4", sub: "u4_chk", foreign: "to get fit", german: "in Form kommen, fit werden" },
-    { unit: "unit4", sub: "u4_chk", foreign: "rhythm", german: "Rhythmus" },
-    { unit: "unit4", sub: "u4_chk", foreign: "to stand up / to get up", german: "aufstehen" },
-    
-    { unit: "unit4", sub: "u4_st1", foreign: "face", german: "Gesicht" },
-    { unit: "unit4", sub: "u4_st1", foreign: "ear", german: "Ohr" },
-    { unit: "unit4", sub: "u4_st1", foreign: "eye", german: "Auge" },
-    { unit: "unit4", sub: "u4_st1", foreign: "nose", german: "Nase" },
-    
-    { unit: "unit4", sub: "u4_st2", foreign: "excuse me", german: "Entschuldigung!" },
-    { unit: "unit4", sub: "u4_st2", foreign: "of course", german: "natürlich" },
-    
-    { unit: "unit4", sub: "u4_sty", foreign: "captain", german: "Kapitän/in" },
-    { unit: "unit4", sub: "u4_sty", foreign: "cabin boy", german: "Schiffsjunge" },
-    { unit: "unit4", sub: "u4_sty", foreign: "storm", german: "Sturm" },
-
-    // --- Unit 5 ---
-    { unit: "unit5", sub: "u5_chk", foreign: "to be sorry", german: "leid tun" },
-    { unit: "unit5", sub: "u5_chk", foreign: "How much (is/are) ...?", german: "Wie viel (kostet/kosten) ...?" },
-    { unit: "unit5", sub: "u5_chk", foreign: "pound", german: "Pfund" },
-    { unit: "unit5", sub: "u5_chk", foreign: "expensive", german: "teuer" },
-    { unit: "unit5", sub: "u5_chk", foreign: "cheap", german: "billig, preiswert" },
-    
-    { unit: "unit5", sub: "u5_st1", foreign: "T-shirt", german: "T-Shirt" },
-    { unit: "unit5", sub: "u5_st1", foreign: "shoe", german: "Schuh" },
-    { unit: "unit5", sub: "u5_st1", foreign: "jeans", german: "Jeans" },
-    { unit: "unit5", sub: "u5_st1", foreign: "shirt", german: "Hemd" },
-    { unit: "unit5", sub: "u5_st1", foreign: "pullover", german: "Pullover" },
-    
-    { unit: "unit5", sub: "u5_st2", foreign: "answering machine", german: "Anrufbeantworter" },
-    { unit: "unit5", sub: "u5_st2", foreign: "message", german: "Nachricht" },
-    { unit: "unit5", sub: "u5_st2", foreign: "to call", german: "anrufen" },
-    
-    { unit: "unit5", sub: "u5_sty", foreign: "dictionary", german: "Wörterbuch" },
-    { unit: "unit5", sub: "u5_sty", foreign: "buyer", german: "Käufer/in" },
-    { unit: "unit5", sub: "u5_sty", foreign: "seller", german: "Verkäufer/in" },
-    { unit: "unit5", sub: "u5_sty", foreign: "yoghurt", german: "Joghurt" },
-
-    // --- Unit 6 ---
-    { unit: "unit6", sub: "u6_chk", foreign: "independent", german: "unabhängig" },
-    { unit: "unit6", sub: "u6_chk", foreign: "American", german: "Amerikaner/in" },
-    { unit: "unit6", sub: "u6_sty", foreign: "government", german: "Regierung" },
-    
-    { unit: "unit6", sub: "u6_st1", foreign: "cereal", german: "Frühstücksflocken" },
-    { unit: "unit6", sub: "u6_st1", foreign: "chocolate", german: "Schokolade" },
-    { unit: "unit6", sub: "u6_st1", foreign: "crisp", german: "Kartoffelchip" },
-    
-    { unit: "unit6", sub: "u6_st2", foreign: "party", german: "Party" },
-    { unit: "unit6", sub: "u6_st2", foreign: "invitation", german: "Einladung" },
-    { unit: "unit6", sub: "u6_st2", foreign: "to invite", german: "einladen" },
-    
-    { unit: "unit6", sub: "u6_sty", foreign: "sponge", german: "Rührkuchen" },
-    { unit: "unit6", sub: "u6_sty", foreign: "jelly", german: "Wackelpudding, Gelee" },
-    { unit: "unit6", sub: "u6_sty", foreign: "custard", german: "Vanillesoße" },
-    { unit: "unit6", sub: "u6_sty", foreign: "skyscraper", german: "Wolkenkratzer" },
-    { unit: "unit6", sub: "u6_sty", foreign: "freedom", german: "Freiheit" }
-  ];
-  
   let currentLang = 'en'; // 'en' oder 'la'
   let appMode = 'learn'; // 'learn' oder 'quiz'
   let structMode = 'single'; // 'single' oder 'unit'
@@ -614,6 +366,7 @@
   let isMcMode = false;
 
   const unitSelect = document.getElementById('unit-select');
+  const startBtn = document.getElementById('start-btn');
   const progressEl = document.getElementById('progress');
   const creditsDisplay = document.getElementById('credits-display');
   const langLabelEl = document.getElementById('lang-label');
@@ -625,6 +378,53 @@
   const nextBtn = document.getElementById('next-btn');
   const feedbackEl = document.getElementById('feedback');
 
+  // Lädt den Wortschatz dynamisch aus englisch.html oder latein.html
+  async function ensureVocabLoaded(lang) {
+    if (lang === 'en' && englishVocab.length > 0) return true;
+    if (lang === 'la' && latinVocab.length > 0) return true;
+
+    const fileName = lang === 'en' ? 'englisch.html' : 'latein.html';
+    const varName = lang === 'en' ? 'englishVocab' : 'latinVocab';
+
+    startBtn.disabled = true;
+    startBtn.textContent = 'Lade Wortschatz... ⏳';
+
+    try {
+      const response = await fetch(fileName);
+      if (!response.ok) throw new Error(`Datei ${fileName} nicht gefunden (HTTP ${response.status})`);
+      const text = await response.text();
+
+      // Extrahiert das Array aus englisch.html bzw. latein.html (egal ob als <script> oder direktes Array)
+      const regex = new RegExp(`(?:const|let|var)\\s+${varName}\\s*=\\s*(\\[[\\s\\S]*?\\]);`);
+      const match = text.match(regex);
+
+      let parsedData = null;
+      if (match && match[1]) {
+        parsedData = new Function(`return ${match[1]}`)();
+      } else if (text.trim().startsWith('[')) {
+        parsedData = new Function(`return ${text}`)();
+      }
+
+      if (!Array.isArray(parsedData) || parsedData.length === 0) {
+        throw new Error(`Kein gültiges Array "${varName}" in ${fileName} gefunden.`);
+      }
+
+      if (lang === 'en') {
+        englishVocab = parsedData;
+      } else {
+        latinVocab = parsedData;
+      }
+      return true;
+    } catch (err) {
+      console.error(err);
+      alert(`Fehler beim Laden von ${fileName}:\n${err.message}\n\nHinweis: Stelle sicher, dass die Datei existiert und über einen Webserver (z. B. Vercel/Live-Server) geöffnet wird.`);
+      return false;
+    } finally {
+      startBtn.disabled = false;
+      startBtn.textContent = 'Starten 🚀';
+    }
+  }
+
   function getActiveDictionary() {
     return currentLang === 'en' ? englishVocab : latinVocab;
   }
@@ -633,7 +433,7 @@
     return currentLang === 'en' ? 'Englisch' : 'Latein';
   }
 
-  function setLanguage(lang) {
+  async function setLanguage(lang) {
     currentLang = lang;
     const btnEn = document.getElementById('btn-lang-en');
     const btnLa = document.getElementById('btn-lang-la');
@@ -657,6 +457,8 @@
 
     document.getElementById('th-foreign').textContent = getForeignLangName();
     updateHideButtonsUI();
+
+    await ensureVocabLoaded(lang);
     updateDropdownOptions();
   }
 
@@ -677,15 +479,18 @@
     unitSelect.innerHTML = '';
 
     if (currentLang === 'la') {
-      const latinLessons = [
-        { val: "all", label: "Alle Lektionen gemischt" },
-        { val: "lek1", label: "Lektion 1 (Beispiel)" },
-        { val: "lek2", label: "Lektion 2 (Beispiel)" }
-      ];
-      latinLessons.forEach(l => {
+      const allOpt = document.createElement('option');
+      allOpt.value = "all";
+      allOpt.textContent = "Alle Lektionen gemischt (Lektion 1 – 97)";
+      unitSelect.appendChild(allOpt);
+
+      const lessonKeys = [...new Set(latinVocab.map(v => v.sub))];
+      lessonKeys.forEach(key => {
+        const num = key.replace('lek', '');
+        const count = latinVocab.filter(v => v.sub === key).length;
         const opt = document.createElement('option');
-        opt.value = l.val;
-        opt.textContent = l.label;
+        opt.value = key;
+        opt.textContent = `Lektion ${num} (${count} Vokabeln)`;
         unitSelect.appendChild(opt);
       });
       return;
@@ -756,7 +561,10 @@
     return isSentence(vocabItem.foreign) || isSentence(vocabItem.german);
   }
 
-  function startApp() {
+  async function startApp() {
+    const loaded = await ensureVocabLoaded(currentLang);
+    if (!loaded) return;
+
     const selection = unitSelect.value;
     const dict = getActiveDictionary();
     let pool = [];
