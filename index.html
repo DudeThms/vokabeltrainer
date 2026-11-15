@@ -57,7 +57,7 @@
       margin-bottom: 5px;
       text-transform: uppercase;
     }
-    .mode-switch {
+    .mode-switch, .action-row {
       display: flex;
       gap: 10px;
       margin-bottom: 12px;
@@ -138,6 +138,47 @@
     .btn-next { background-color: #10b981; margin-top: 10px; }
     .btn-next:hover { background-color: #059669; }
     
+    /* Lernmodus Styles */
+    .learn-container {
+      text-align: left;
+      margin-bottom: 15px;
+    }
+    .vocab-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    .vocab-table th, .vocab-table td {
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      font-size: 14px;
+    }
+    .vocab-table th {
+      background-color: #f8fafc;
+      color: #475569;
+    }
+    .pagination-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .secondary-btn {
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      background-color: #64748b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .secondary-btn:disabled {
+      background-color: #cbd5e1;
+      cursor: not-allowed;
+    }
+    .secondary-btn:hover:not(:disabled) { background-color: #475569; }
+
     .mc-options {
       display: flex;
       flex-direction: column;
@@ -157,7 +198,7 @@
       padding-left: 15px;
       transition: all 0.15s;
     }
-    .mc-btn.hover:not(:disabled) {
+    .mc-btn:hover:not(:disabled) {
       border-color: #2563eb;
       background-color: #eff6ff;
     }
@@ -178,20 +219,55 @@
 <div class="card">
   <h1>Green Line 1 📚</h1>
 
-  <div class="filter-box">
-    <label>Lernmodus wählen:</label>
+  <!-- Auswahl-Menü -->
+  <div id="menu-area" class="filter-box">
+    <label>Wähle deinen Modus:</label>
     <div class="mode-switch">
-      <button id="btn-mode-single" class="mode-btn active" onclick="setMode('single')">1. Einzelnes Unterkapitel</button>
-      <button id="btn-mode-unit" class="mode-btn" onclick="setMode('unit')">2. Ganze Unit komplett</button>
+      <button id="btn-app-learn" class="mode-btn active" onclick="setAppMode('learn')">📖 Lernmodus (Vorschau)</button>
+      <button id="btn-app-quiz" class="mode-btn" onclick="setAppMode('quiz')">✍️ Abfragemodus</button>
+    </div>
+
+    <label>Struktur wählen:</label>
+    <div class="mode-switch">
+      <button id="btn-struct-single" class="mode-btn active" onclick="setStructMode('single')">Einzelnes Unterkapitel</button>
+      <button id="btn-struct-unit" class="mode-btn" onclick="setStructMode('unit')">Ganze Unit komplett</button>
     </div>
 
     <label for="unit-select">Bereich auswählen:</label>
     <select id="unit-select">
       <!-- Wird dynamisch per JS befüllt -->
     </select>
-    <button class="action-btn" onclick="startQuizFromSelection()">Lernen starten 🚀</button>
+    <button class="action-btn" onclick="startApp()">Starten 🚀</button>
+  </div>
+
+  <!-- Lernmodus-Ansicht -->
+  <div id="learn-area" class="hidden">
+    <div class="top-bar">
+      <span id="learn-page-info">Seiteninfo</span>
+      <span id="learn-total-info" style="color: #64748b; font-size: 12px;"></span>
+    </div>
+    <div class="learn-container">
+      <table class="vocab-table">
+        <thead>
+          <tr>
+            <th>Englisch</th>
+            <th>Deutsch</th>
+          </tr>
+        </thead>
+        <tbody id="learn-table-body">
+          <!-- Zeilen werden per JS geladen -->
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination-row">
+      <button id="prev-page-btn" class="secondary-btn" onclick="changeLearnPage(-1)">⬅️ Zurück</button>
+      <button id="next-page-btn" class="secondary-btn" onclick="changeLearnPage(1)">Weiter ➡️</button>
+    </div>
+    <button class="action-btn btn-next" onclick="switchToQuizFromLearn()">Zur Abfrage wechseln ✍️</button>
+    <button class="secondary-btn" style="width: 100%; margin-top: 10px; background-color: #94a3b8;" onclick="resetToMenu()">Zurück zum Menü</button>
   </div>
   
+  <!-- Abfrage-Modus (Quiz) -->
   <div id="quiz-area" class="hidden">
     <div class="top-bar">
       <span id="progress">Frage 1 von 25</span>
@@ -212,12 +288,14 @@
 
     <p id="feedback" class="feedback"></p>
     <button id="next-btn" class="action-btn btn-next hidden" onclick="nextWord()">Nächste Vokabel</button>
+    <button class="secondary-btn" style="width: 100%; margin-top: 15px; background-color: #94a3b8;" onclick="resetToMenu()">Zurück zum Menü</button>
   </div>
 
+  <!-- Ergebnis-Ansicht -->
   <div id="result-area" class="hidden">
     <h2 id="result-title">Geschafft! 🏆</h2>
     <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
-    <button class="action-btn" onclick="resetToMenu()">Zurück zur Auswahl</button>
+    <button class="action-btn" onclick="resetToMenu()">Zurück zum Menü</button>
   </div>
 </div>
 
@@ -477,8 +555,13 @@
     { unit: "unit6", sub: "u6_sty", english: "freedom", german: "Freiheit" }
   ];
 
-  let currentMode = 'single'; // 'single' oder 'unit'
+  let appMode = 'learn'; // 'learn' oder 'quiz'
+  let structMode = 'single'; // 'single' oder 'unit'
+  
   let activeVocabList = [];
+  let currentLearnPage = 0;
+  const itemsPerPage = 6;
+
   let currentIndex = 0;
   let score = 0;
   let credits = 4;
@@ -497,17 +580,23 @@
   const nextBtn = document.getElementById('next-btn');
   const feedbackEl = document.getElementById('feedback');
 
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('btn-mode-single').classList.toggle('active', mode === 'single');
-    document.getElementById('btn-mode-unit').classList.toggle('active', mode === 'unit');
+  function setAppMode(mode) {
+    appMode = mode;
+    document.getElementById('btn-app-learn').classList.toggle('active', mode === 'learn');
+    document.getElementById('btn-app-quiz').classList.toggle('active', mode === 'quiz');
+  }
+
+  function setStructMode(mode) {
+    structMode = mode;
+    document.getElementById('btn-struct-single').classList.toggle('active', mode === 'single');
+    document.getElementById('btn-struct-unit').classList.toggle('active', mode === 'unit');
     updateDropdownOptions();
   }
 
   function updateDropdownOptions() {
     unitSelect.innerHTML = '';
 
-    if (currentMode === 'single') {
+    if (structMode === 'single') {
       const sections = [
         { val: "pu_ab", label: "Pick-up A & B" },
         { val: "u1_chk", label: "Unit 1 – Check-in (At home)" },
@@ -561,6 +650,91 @@
         unitSelect.appendChild(opt);
       });
     }
+  }
+
+  function startApp() {
+    const selection = unitSelect.value;
+    let pool = [];
+
+    if (structMode === 'single') {
+      pool = allVocab.filter(v => v.sub === selection);
+    } else {
+      pool = allVocab.filter(v => v.unit === selection);
+    }
+
+    if (pool.length === 0) {
+      pool = allVocab;
+    }
+
+    activeVocabList = [...pool];
+
+    document.getElementById('menu-area').classList.add('hidden');
+
+    if (appMode === 'learn') {
+      currentLearnPage = 0;
+      document.getElementById('learn-area').classList.remove('hidden');
+      renderLearnPage();
+    } else {
+      activeVocabList.sort(() => Math.random() - 0.5);
+      activeVocabList = activeVocabList.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
+      document.getElementById('quiz-area').classList.remove('hidden');
+      restartQuiz();
+    }
+  }
+
+  function renderLearnPage() {
+    const tableBody = document.getElementById('learn-table-body');
+    tableBody.innerHTML = '';
+
+    const start = currentLearnPage * itemsPerPage;
+    const end = Math.min(start + itemsPerPage, activeVocabList.length);
+    const pageItems = activeVocabList.slice(start, end);
+
+    pageItems.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><strong>${item.english}</strong></td><td>${item.german}</td>`;
+      tableBody.appendChild(tr);
+    });
+
+    const totalPages = Math.ceil(activeVocabList.length / itemsPerPage);
+    document.getElementById('learn-page-info').textContent = `Seite ${currentLearnPage + 1} von ${totalPages}`;
+    document.getElementById('learn-total-info').textContent = `(Gesamt: ${activeVocabList.length} Vokabeln)`;
+
+    document.getElementById('prev-page-btn').disabled = currentLearnPage === 0;
+    document.getElementById('next-page-btn').disabled = end >= activeVocabList.length;
+  }
+
+  function changeLearnPage(direction) {
+    currentLearnPage += direction;
+    renderLearnPage();
+  }
+
+  function switchToQuizFromLearn() {
+    document.getElementById('learn-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+    
+    activeVocabList.sort(() => Math.random() - 0.5);
+    activeVocabList = activeVocabList.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
+    restartQuiz();
+  }
+
+  function resetToMenu() {
+    document.getElementById('menu-area').classList.remove('hidden');
+    document.getElementById('learn-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.add('hidden');
+    document.getElementById('result-area').classList.add('hidden');
+  }
+
+  function restartQuiz() {
+    currentIndex = 0;
+    score = 0;
+    credits = 4;
+    updateCreditsDisplay();
+    loadWord();
+  }
+
+  function updateCreditsDisplay() {
+    creditsDisplay.textContent = `❤️ Credits: ${credits}`;
   }
 
   function isSentence(text) {
@@ -620,46 +794,6 @@
       }
     }
     return dp[m][n];
-  }
-
-  function startQuizFromSelection() {
-    const selection = unitSelect.value;
-    let pool = [];
-
-    if (currentMode === 'single') {
-      pool = allVocab.filter(v => v.sub === selection);
-    } else {
-      pool = allVocab.filter(v => v.unit === selection);
-    }
-
-    if (pool.length === 0) {
-      pool = allVocab;
-    }
-
-    pool.sort(() => Math.random() - 0.5);
-    activeVocabList = pool.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
-
-    document.getElementById('result-area').classList.add('hidden');
-    document.getElementById('quiz-area').classList.remove('hidden');
-
-    restartQuiz();
-  }
-
-  function resetToMenu() {
-    document.getElementById('quiz-area').classList.add('hidden');
-    document.getElementById('result-area').classList.add('hidden');
-  }
-
-  function restartQuiz() {
-    currentIndex = 0;
-    score = 0;
-    credits = 4;
-    updateCreditsDisplay();
-    loadWord();
-  }
-
-  function updateCreditsDisplay() {
-    creditsDisplay.textContent = `❤️ Credits: ${credits}`;
   }
 
   function loadWord() {
