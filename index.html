@@ -444,4 +444,355 @@
     { level: 4, english: "wall", german: "Wand, Mauer" },
     { level: 4, english: "answer", german: "Antwort" },
     { level: 4, english: "thirteen", german: "dreizehn" },
-    { level:
+    { level: 4, english: "fourteen", german: "vierzehn" },
+    { level: 4, english: "fifteen", german: "fünfzehn" },
+    { level: 4, english: "sixteen", german: "sechzehn" },
+    { level: 4, english: "seventeen", german: "siebzehn" },
+    { level: 4, english: "eighteen", german: "achtzehn" },
+    { level: 4, english: "nineteen", german: "neunzehn" },
+    { level: 4, english: "twenty", german: "zwanzig" },
+    { level: 4, english: "twenty-one", german: "einundzwanzig" },
+    { level: 4, english: "thirty", german: "dreißig" },
+    { level: 4, english: "forty", german: "vierzig" },
+    { level: 4, english: "fifty", german: "fünfzig" },
+    { level: 4, english: "sixty", german: "sechzig" },
+    { level: 4, english: "seventy", german: "siebzig" },
+    { level: 4, english: "eighty", german: "achtzig" },
+    { level: 4, english: "ninety", german: "neunzig" },
+    { level: 4, english: "a/one hundred", german: "hundert, einhundert" },
+    { level: 4, english: "from ... to", german: "von ... bis" },
+    { level: 4, english: "mirror", german: "Spiegel" },
+    { level: 4, english: "lamp", german: "Lampe" },
+    { level: 4, english: "poster", german: "Poster" },
+    { level: 4, english: "guitar", german: "Gitarre" },
+    { level: 4, english: "skateboard", german: "Skateboard" },
+    { level: 4, english: "rug", german: "Teppich, Vorleger" },
+    { level: 4, english: "shelf (pl. shelves)", german: "Regal" },
+    { level: 4, english: "computer", german: "Computer" },
+    { level: 4, english: "cuddly toy", german: "Stofftier" },
+    { level: 4, english: "toy", german: "Spielzeug" },
+    { level: 4, english: "busy", german: "belebt, beschäftigt" },
+    { level: 4, english: "Who ... for?", german: "Für wen ...?" },
+    { level: 4, english: "who", german: "wer, wem, wen" },
+    { level: 4, english: "to explore", german: "auf Entdeckungsreise gehen, sich umschauen, erkunden, erforschen" },
+    { level: 4, english: "best", german: "beste/-r/-s" },
+    { level: 4, english: "bag", german: "Tasche, Tüte" },
+    { level: 4, english: "maybe", german: "vielleicht" },
+    { level: 4, english: "after", german: "nach (zeitlich)" },
+    { level: 4, english: "visit", german: "Besuch" },
+    { level: 4, english: "outside", german: "nach draußen, draußen, außerhalb (von)" },
+    { level: 4, english: "awful", german: "schrecklich, furchtbar" },
+    { level: 4, english: "Don't worry!", german: "Keine Sorge!" },
+    { level: 4, english: "sentence", german: "Satz" },
+    { level: 4, english: "right", german: "richtig, korrekt" },
+    { level: 4, english: "ending", german: "Ende, Schluss (einer Geschichte)" },
+    { level: 4, english: "to talk about", german: "sprechen über, erzählen von" },
+    { level: 4, english: "roof", german: "Dach" },
+    { level: 4, english: "window", german: "Fenster" },
+    { level: 4, english: "loft", german: "Dachboden" },
+    { level: 4, english: "hall", german: "Flur" },
+    { level: 4, english: "cellar", german: "Keller" },
+    { level: 4, english: "terrace", german: "Terrasse" },
+    { level: 4, english: "balcony", german: "Balkon" },
+    { level: 4, english: "garage", german: "Garage" },
+    { level: 4, english: "shed", german: "Schuppen" },
+    { level: 4, english: "step", german: "Stufe, Schritt" },
+    { level: 4, english: "to draw", german: "zeichnen" },
+    { level: 4, english: "fantasy", german: "Fantasie, Traum-" }
+  ];
+
+  let activeVocabList = [];
+  let currentIndex = 0;
+  let score = 0;
+  let credits = 4;
+  let isDeToEn = true;
+  let isMcMode = false;
+
+  const unitSelect = document.getElementById('unit-select');
+  const progressEl = document.getElementById('progress');
+  const creditsDisplay = document.getElementById('credits-display');
+  const langLabelEl = document.getElementById('lang-label');
+  const promptWordEl = document.getElementById('prompt-word');
+  const typeArea = document.getElementById('type-area');
+  const mcArea = document.getElementById('mc-area');
+  const inputEl = document.getElementById('answer-input');
+  const checkBtn = document.getElementById('check-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const feedbackEl = document.getElementById('feedback');
+
+  function isSentence(text) {
+    return text.includes(' ') || text.includes('.') || text.includes('!') || text.includes('?');
+  }
+
+  function isSimpleSingleWord(vocabItem) {
+    const en = vocabItem.english.trim();
+    const de = vocabItem.german.trim();
+    if (/[.!?(]/.test(en) || /[.!?(]/.test(de)) return false;
+    if (en.includes(' ') || en.includes('/')) return false;
+    return true;
+  }
+
+  function getValidMeanings(answerText) {
+    const parts = answerText.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+    const meanings = new Set();
+
+    parts.forEach(part => {
+      const lower = part.toLowerCase();
+      meanings.add(lower);
+
+      if (lower.includes('/')) {
+        const slashParts = lower.split('/');
+        if (slashParts.length === 2) {
+          const base = slashParts[0].trim();
+          const suffix = slashParts[1].trim();
+          if (suffix.length <= 3) {
+            meanings.add(base);
+            meanings.add(base + suffix);
+          } else {
+            meanings.add(base);
+            meanings.add(suffix);
+          }
+        }
+      }
+    });
+
+    return Array.from(meanings);
+  }
+
+  function getEditDistance(a, b) {
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + cost
+        );
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+          dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+        }
+      }
+    }
+    return dp[m][n];
+  }
+
+  function updateVocabPool() {
+    const selection = unitSelect.value;
+    const [type, levelStr] = selection.split('_');
+    const targetLevel = parseInt(levelStr, 10);
+
+    let pool = [];
+    if (type === 'single') {
+      pool = allVocab.filter(v => v.level === targetLevel);
+    } else {
+      pool = allVocab.filter(v => v.level <= targetLevel);
+    }
+
+    pool.sort(() => Math.random() - 0.5);
+    activeVocabList = pool.slice(0, 25);
+
+    restartQuiz();
+  }
+
+  function restartQuiz() {
+    currentIndex = 0;
+    score = 0;
+    credits = 4;
+    document.getElementById('result-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+    updateCreditsDisplay();
+    loadWord();
+  }
+
+  function updateCreditsDisplay() {
+    creditsDisplay.textContent = `❤️ Credits: ${credits}`;
+  }
+
+  function loadWord() {
+    if (credits <= 0) {
+      endGame(false);
+      return;
+    }
+
+    const current = activeVocabList[currentIndex];
+    progressEl.textContent = `Frage ${currentIndex + 1} von ${activeVocabList.length}`;
+    feedbackEl.textContent = '';
+    nextBtn.classList.add('hidden');
+
+    isDeToEn = Math.random() < 0.6;
+    
+    // Nur noch 10% Chance für Multiple Choice bei einfachen Wörtern (Sätze weiterhin immer MC)
+    if (isSimpleSingleWord(current)) {
+      isMcMode = Math.random() < 0.10; 
+    } else {
+      isMcMode = true;
+    }
+
+    const questionText = isDeToEn ? current.german : current.english;
+    const expectedAnswer = isDeToEn ? current.english : current.german;
+
+    if (isDeToEn) {
+      langLabelEl.textContent = 'Deutsch';
+      langLabelEl.className = 'lang-badge lang-de';
+      inputEl.placeholder = 'Englische Übersetzung...';
+    } else {
+      langLabelEl.textContent = 'Englisch';
+      langLabelEl.className = 'lang-badge lang-en';
+      inputEl.placeholder = 'Deutsche Übersetzung...';
+    }
+
+    promptWordEl.textContent = questionText;
+
+    if (!isMcMode) {
+      typeArea.classList.remove('hidden');
+      mcArea.classList.add('hidden');
+      inputEl.value = '';
+      inputEl.disabled = false;
+      checkBtn.classList.remove('hidden');
+      inputEl.focus();
+    } else {
+      typeArea.classList.add('hidden');
+      mcArea.classList.remove('hidden');
+      generateMultipleChoice(expectedAnswer);
+    }
+  }
+
+  function generateMultipleChoice(correctAnswer) {
+    mcArea.innerHTML = '';
+    
+    const targetIsSentence = isSentence(correctAnswer);
+
+    const wrongOptions = allVocab
+      .map(item => isDeToEn ? item.english : item.german)
+      .filter(word => word !== correctAnswer && isSentence(word) === targetIsSentence);
+    
+    const poolToUse = wrongOptions.length >= 2
+      ? [...new Set(wrongOptions)]
+      : [...new Set(allVocab.map(item => isDeToEn ? item.english : item.german).filter(w => w !== correctAnswer && isSentence(w) === targetIsSentence))];
+
+    poolToUse.sort(() => Math.random() - 0.5);
+    
+    const selectedOptions = [correctAnswer, ...poolToUse.slice(0, 2)];
+    selectedOptions.sort(() => Math.random() - 0.5);
+
+    selectedOptions.forEach(option => {
+      const btn = document.createElement('button');
+      btn.className = 'mc-btn';
+      btn.textContent = option;
+      btn.onclick = () => checkMcAnswer(btn, option, correctAnswer);
+      mcArea.appendChild(btn);
+    });
+  }
+
+  function checkMcAnswer(clickedBtn, selectedOption, correctAnswer) {
+    const allButtons = mcArea.querySelectorAll('.mc-btn');
+    allButtons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === correctAnswer) {
+        btn.classList.add('correct');
+      }
+    });
+
+    if (selectedOption === correctAnswer) {
+      feedbackEl.textContent = 'Richtig! 🎉';
+      feedbackEl.style.color = '#10b981';
+      score++;
+    } else {
+      clickedBtn.classList.add('wrong');
+      credits--;
+      updateCreditsDisplay();
+      feedbackEl.textContent = `Falsch! Richtig ist: "${correctAnswer}"`;
+      feedbackEl.style.color = '#ef4444';
+    }
+
+    if (credits <= 0) {
+      setTimeout(() => endGame(false), 1500);
+    } else {
+      nextBtn.classList.remove('hidden');
+    }
+  }
+
+  function checkTypedAnswer() {
+    const userAnswer = inputEl.value.trim().toLowerCase();
+    const originalCorrect = isDeToEn ? activeVocabList[currentIndex].english : activeVocabList[currentIndex].german;
+    
+    if (userAnswer === '') return;
+
+    inputEl.disabled = true;
+    checkBtn.classList.add('hidden');
+
+    const validMeanings = getValidMeanings(originalCorrect);
+    const isExactMatch = validMeanings.includes(userAnswer);
+
+    let isNearMatch = false;
+    if (!isExactMatch && userAnswer.length >= 2) {
+      isNearMatch = validMeanings.some(meaning => meaning.length >= 3 && getEditDistance(userAnswer, meaning) === 1);
+    }
+
+    if (isExactMatch) {
+      feedbackEl.textContent = 'Richtig! 🎉';
+      feedbackEl.style.color = '#10b981';
+      score++;
+      nextBtn.classList.remove('hidden');
+    } else if (isNearMatch) {
+      feedbackEl.textContent = `Fast richtig! ✍️ (Richtig: "${originalCorrect}")`;
+      feedbackEl.style.color = '#d97706';
+      score++;
+      nextBtn.classList.remove('hidden');
+    } else {
+      credits--;
+      updateCreditsDisplay();
+      feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
+      feedbackEl.style.color = '#ef4444';
+      
+      if (credits <= 0) {
+        setTimeout(() => endGame(false), 1500);
+      } else {
+        nextBtn.classList.remove('hidden');
+      }
+    }
+  }
+
+  function nextWord() {
+    currentIndex++;
+    if (currentIndex < activeVocabList.length) {
+      loadWord();
+    } else {
+      endGame(true);
+    }
+  }
+
+  function endGame(success) {
+    document.getElementById('quiz-area').classList.add('hidden');
+    document.getElementById('result-area').classList.remove('hidden');
+    
+    const titleEl = document.getElementById('result-title');
+    const scoreTextEl = document.getElementById('score-text');
+
+    if (success) {
+      titleEl.textContent = "Geschafft! 🏆";
+      scoreTextEl.textContent = `Super! Du hast ${score} von ${activeVocabList.length} Vokabeln richtig geschafft und noch ${credits} Credit(s) übrig!`;
+    } else {
+      titleEl.textContent = "Game Over ❌";
+      scoreTextEl.textContent = `Keine Credits mehr übrig! Du bist bei Frage ${currentIndex + 1} ausgeschieden. Versuch es noch einmal!`;
+    }
+  }
+
+  inputEl.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !isMcMode && !checkBtn.classList.contains('hidden')) {
+      checkTypedAnswer();
+    }
+  });
+
+  updateVocabPool();
+</script>
+
+</body>
+</html>
