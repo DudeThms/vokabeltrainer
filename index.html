@@ -524,18 +524,14 @@
     return text.includes(' ') || text.includes('.') || text.includes('!') || text.includes('?');
   }
 
-  // Prüft, ob eine Vokabel ein einzelnes, einfaches Wort ohne Satzzeichen/Klammern ist
   function isSimpleSingleWord(vocabItem) {
     const en = vocabItem.english.trim();
     const de = vocabItem.german.trim();
-    // Sätze, Auslassungspunkte oder Klammer-Erklärungen ausschließen
     if (/[.!?(]/.test(en) || /[.!?(]/.test(de)) return false;
-    // Englische Seite muss ein einzelnes Wort sein (keine Leerzeichen oder Schrägstriche)
     if (en.includes(' ') || en.includes('/')) return false;
     return true;
   }
 
-  // Bereitet alle möglichen Einzelbedeutungen einer Vokabel für die Prüfung auf
   function getValidMeanings(answerText) {
     const parts = answerText.split(/[,;]/).map(s => s.trim()).filter(Boolean);
     const meanings = new Set();
@@ -544,7 +540,6 @@
       const lower = part.toLowerCase();
       meanings.add(lower);
 
-      // Varianten mit Schrägstrich auflösen (z. B. "ein/e" -> "ein", "eine" | "Engländer/in" -> "engländer", "engländerin")
       if (lower.includes('/')) {
         const slashParts = lower.split('/');
         if (slashParts.length === 2) {
@@ -564,7 +559,6 @@
     return Array.from(meanings);
   }
 
-  // Berechnet die Damerau-Levenshtein-Distanz (erkennt 1 fehlenden, überflüssigen, falschen oder vertauschten Buchstaben)
   function getEditDistance(a, b) {
     const m = a.length;
     const n = b.length;
@@ -577,11 +571,10 @@
       for (let j = 1; j <= n; j++) {
         const cost = a[i - 1] === b[j - 1] ? 0 : 1;
         dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,      // Zeichen gelöscht
-          dp[i][j - 1] + 1,      // Zeichen eingefügt
-          dp[i - 1][j - 1] + cost // Zeichen ersetzt
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + cost
         );
-        // Buchstabendreher (Transposition zweier benachbarter Zeichen)
         if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
           dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
         }
@@ -635,11 +628,11 @@
 
     isEnToDe = Math.random() < 0.5;
     
-    // Nur einfache Einzelwörter dürfen zufällig als Texteingabe dran kommen; Sätze/Phrasen immer Multiple Choice
+    // 70% Texteingabe (für einfache Wörter), 30% Multiple Choice
     if (isSimpleSingleWord(current)) {
-      isMcMode = Math.random() < 0.5;
+      isMcMode = Math.random() < 0.3; 
     } else {
-      isMcMode = true;
+      isMcMode = true; // Sätze immer Multiple Choice
     }
 
     const questionText = isEnToDe ? current.english : current.german;
@@ -648,7 +641,7 @@
     if (isEnToDe) {
       langLabelEl.textContent = 'Englisch';
       langLabelEl.className = 'lang-badge lang-en';
-      inputEl.placeholder = 'Deutsche Übersetzung (ein Wort)...';
+      inputEl.placeholder = 'Deutsche Übersetzung...';
     } else {
       langLabelEl.textContent = 'Deutsch';
       langLabelEl.className = 'lang-badge lang-de';
@@ -738,7 +731,6 @@
     const validMeanings = getValidMeanings(originalCorrect);
     const isExactMatch = validMeanings.includes(userAnswer);
 
-    // Tippfehler-Toleranz: genau 1 Bearbeitungsfehler bei Wörtern ab 3 Buchstaben
     let isNearMatch = false;
     if (!isExactMatch && userAnswer.length >= 2) {
       isNearMatch = validMeanings.some(meaning => meaning.length >= 3 && getEditDistance(userAnswer, meaning) === 1);
@@ -750,7 +742,7 @@
       score++;
       nextBtn.classList.remove('hidden');
     } else if (isNearMatch) {
-      feedbackEl.textContent = `Fast richtig! ✍️ (Richtig geschrieben: "${originalCorrect}")`;
+      feedbackEl.textContent = `Fast richtig! ✍️ (Richtig: "${originalCorrect}")`;
       feedbackEl.style.color = '#d97706';
       score++;
       nextBtn.classList.remove('hidden');
