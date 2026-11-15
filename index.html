@@ -255,7 +255,7 @@
     { level: 0, english: "school", german: "Schule" },
     { level: 0, english: "Greenwich Park is big.", german: "Der Greenwich Park ist groß." },
     { level: 0, english: "It's great for cycling.", german: "Er ist super zum Radfahren." },
-    { level: 0, english: "I don't like cycling.", german: "I fahre nicht gern Rad." },
+    { level: 0, english: "I don't like cycling.", german: "Ich fahre nicht gern Rad." },
     { level: 0, english: "My favourite sport is football.", german: "Mein Lieblingssport ist Fußball." },
     { level: 0, english: "I like the boating lake.", german: "Ich mag den See mit den Booten., Mir gefällt der See mit den Booten." },
     { level: 0, english: "What's that?", german: "Was ist das?" },
@@ -524,12 +524,8 @@
     return text.includes(' ') || text.includes('.') || text.includes('!') || text.includes('?');
   }
 
-  function isSimpleSingleWord(vocabItem) {
-    const en = vocabItem.english.trim();
-    const de = vocabItem.german.trim();
-    if (/[.!?(]/.test(en) || /[.!?(]/.test(de)) return false;
-    if (en.includes(' ') || en.includes('/')) return false;
-    return true;
+  function isItemSentence(vocabItem) {
+    return isSentence(vocabItem.english) || isSentence(vocabItem.german);
   }
 
   function getValidMeanings(answerText) {
@@ -596,7 +592,6 @@
     }
 
     pool.sort(() => Math.random() - 0.5);
-    // Wir klonen das Objekt, damit wir eine Eigenschaft "nearMissCount" für die Wiederholung anhängen können
     activeVocabList = pool.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
 
     restartQuiz();
@@ -627,13 +622,13 @@
     feedbackEl.textContent = '';
     nextBtn.classList.add('hidden');
 
-    // 80% Deutsch -> Englisch, 20% Englisch -> Deutsch
     isDeToEn = Math.random() < 0.80;
     
-    if (isSimpleSingleWord(current)) {
-      isMcMode = Math.random() < 0.10; 
-    } else {
+    // Sätze immer MC (100%), einzelne Wörter zu 30% MC und 70% Texteingabe
+    if (isItemSentence(current)) {
       isMcMode = true;
+    } else {
+      isMcMode = Math.random() < 0.30;
     }
 
     const questionText = isDeToEn ? current.german : current.english;
@@ -745,14 +740,12 @@
       nextBtn.classList.remove('hidden');
     } else if (isNearMatch) {
       if (currentVocab.nearMissCount === 0) {
-        // 1. Tippfehler: Kein Credit Abzug, Hinweis ausgeben, Vokabel hinten anstellen zur Wiederholung
         currentVocab.nearMissCount = 1;
-        activeVocabList.push({ ...currentVocab }); // am Ende nochmal einreihen
+        activeVocabList.push({ ...currentVocab });
         feedbackEl.textContent = `Fast richtig! ✍️ (Richtig: "${originalCorrect}"). Wir üben das gleich noch mal!`;
         feedbackEl.style.color = '#d97706';
         nextBtn.classList.remove('hidden');
       } else {
-        // 2. Fehler beim Wiederholen: Jetzt Credit abziehen!
         credits--;
         updateCreditsDisplay();
         feedbackEl.textContent = `Schon wieder ein Tippfehler! ❌ (Richtig wäre: "${originalCorrect}")`;
@@ -765,7 +758,6 @@
         }
       }
     } else {
-      // Kompletter Fehler (kein leichter Tippfehler): Sofort Credit abziehen
       credits--;
       updateCreditsDisplay();
       feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
