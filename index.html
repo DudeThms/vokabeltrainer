@@ -672,6 +672,7 @@
   }
 
   function getValidMeanings(answerText) {
+    // Alle Antwortmöglichkeiten (getrennt durch Komma, Semikolon oder Schrägstrich) als richtig zulassen
     const parts = answerText.split(/[,;/]/).map(s => s.trim()).filter(Boolean);
     const meanings = new Set();
 
