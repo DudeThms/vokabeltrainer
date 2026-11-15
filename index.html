@@ -145,7 +145,7 @@
     }
     .vocab-table {
       width: 100%;
-      table-layout: fixed; /* Erzwingt exakt gleiche Aufteilung */
+      table-layout: fixed; /* Erzwingt exakt gleiche Aufteilung der Spalten */
       border-collapse: collapse;
       margin-bottom: 15px;
     }
@@ -153,7 +153,7 @@
       border: 1px solid #e2e8f0;
       padding: 10px;
       font-size: 14px;
-      width: 50%; /* Jede Spalte genau 50% */
+      width: 50%; /* Jede Spalte exakt 50% */
       word-wrap: break-word;
       overflow: hidden;
     }
@@ -161,7 +161,8 @@
       background-color: #f8fafc;
       color: #475569;
     }
-    /* Klasse zum Ausblenden von Spalteninhalten */
+    
+    /* Versteckte Zelle / Aufdeck-Effekt */
     .hidden-col {
       color: transparent;
       background-color: #e2e8f0;
@@ -264,8 +265,10 @@
       <span id="learn-total-info" style="color: #64748b; font-size: 12px;"></span>
     </div>
     
-    <div style="margin-bottom: 10px;">
-      <button id="toggle-hide-btn" class="secondary-btn" style="width: 100%; background-color: #0284c7; font-size: 13px; padding: 8px;" onclick="toggleHideMode()">👁️ Spalte ausblenden (Selbsttest)</button>
+    <!-- Zwei Ausblende-Buttons nebeneinander -->
+    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+      <button id="btn-hide-de" class="secondary-btn" style="flex: 1; background-color: #0284c7; font-size: 12px; padding: 8px;" onclick="toggleHideColumn('de')">🙈 Deutsch ausblenden</button>
+      <button id="btn-hide-en" class="secondary-btn" style="flex: 1; background-color: #0284c7; font-size: 12px; padding: 8px;" onclick="toggleHideColumn('en')">🙈 Englisch ausblenden</button>
     </div>
 
     <div class="learn-container">
@@ -579,7 +582,7 @@
 
   let appMode = 'learn'; // 'learn' oder 'quiz'
   let structMode = 'single'; // 'single' oder 'unit'
-  let hideState = 0; // 0 = alle sichtbar, 1 = Deutsch ausgeblendet, 2 = Englisch ausgeblendet
+  let hiddenColumn = null; // null, 'de' oder 'en'
   
   let activeVocabList = [];
   let currentLearnPage = 0;
@@ -690,8 +693,8 @@
     }
 
     activeVocabList = [...pool];
-    hideState = 0;
-    updateHideButtonText();
+    hiddenColumn = null;
+    updateHideButtonsUI();
 
     document.getElementById('menu-area').classList.add('hidden');
 
@@ -707,23 +710,34 @@
     }
   }
 
-  function toggleHideMode() {
-    hideState = (hideState + 1) % 3;
-    updateHideButtonText();
+  function toggleHideColumn(col) {
+    if (hiddenColumn === col) {
+      hiddenColumn = null;
+    } else {
+      hiddenColumn = col;
+    }
+    updateHideButtonsUI();
     renderLearnPage();
   }
 
-  function updateHideButtonText() {
-    const btn = document.getElementById('toggle-hide-btn');
-    if (hideState === 0) {
-      btn.textContent = "👁️ Spalte ausblenden (Selbsttest)";
-      btn.style.backgroundColor = "#0284c7";
-    } else if (hideState === 1) {
-      btn.textContent = "🙈 Deutsch ausgeblendet (Klick zum Aufdecken)";
-      btn.style.backgroundColor = "#d97706";
+  function updateHideButtonsUI() {
+    const btnDe = document.getElementById('btn-hide-de');
+    const btnEn = document.getElementById('btn-hide-en');
+
+    if (hiddenColumn === 'de') {
+      btnDe.textContent = "👁️ Deutsch einblenden";
+      btnDe.style.backgroundColor = "#d97706";
     } else {
-      btn.textContent = "🙈 Englisch ausgeblendet (Klick zum Aufdecken)";
-      btn.style.backgroundColor = "#d97706";
+      btnDe.textContent = "🙈 Deutsch ausblenden";
+      btnDe.style.backgroundColor = "#0284c7";
+    }
+
+    if (hiddenColumn === 'en') {
+      btnEn.textContent = "👁️ Englisch einblenden";
+      btnEn.style.backgroundColor = "#d97706";
+    } else {
+      btnEn.textContent = "🙈 Englisch ausblenden";
+      btnEn.style.backgroundColor = "#0284c7";
     }
   }
 
@@ -744,7 +758,7 @@
       
       const tdEn = document.createElement('td');
       tdEn.innerHTML = `<strong>${item.english}</strong>`;
-      if (hideState === 2) {
+      if (hiddenColumn === 'en') {
         tdEn.className = 'hidden-col';
         tdEn.title = "Klicken zum Aufdecken";
         tdEn.onclick = function() { revealCell(this); };
@@ -752,7 +766,7 @@
 
       const tdDe = document.createElement('td');
       tdDe.textContent = item.german;
-      if (hideState === 1) {
+      if (hiddenColumn === 'de') {
         tdDe.className = 'hidden-col';
         tdDe.title = "Klicken zum Aufdecken";
         tdDe.onclick = function() { revealCell(this); };
@@ -1026,8 +1040,8 @@
     document.getElementById('quiz-area').classList.add('hidden');
     document.getElementById('result-area').classList.remove('hidden');
     
-    let titleEl = document.getElementById('result-title');
-    let scoreTextEl = document.getElementById('result-text') || document.getElementById('score-text');
+    const titleEl = document.getElementById('result-title');
+    const scoreTextEl = document.getElementById('score-text');
 
     if (success) {
       titleEl.textContent = "Geschafft! 🏆";
