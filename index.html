@@ -27,7 +27,7 @@
     }
     h1 {
       font-size: 22px;
-      margin: 0 0 10px 0;
+      margin: 0 0 15px 0;
       color: #1e293b;
     }
     .top-bar {
@@ -46,7 +46,7 @@
       border-radius: 20px;
     }
     .filter-box {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       text-align: left;
     }
     .filter-box label {
@@ -56,6 +56,27 @@
       color: #475569;
       margin-bottom: 5px;
       text-transform: uppercase;
+    }
+    .mode-switch {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border: 1px solid #cbd5e1;
+      background-color: #f8fafc;
+      color: #475569;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background-color: #2563eb;
+      color: white;
+      border-color: #2563eb;
     }
     select {
       width: 100%;
@@ -67,6 +88,7 @@
       color: #0f172a;
       font-weight: 500;
       cursor: pointer;
+      margin-bottom: 12px;
     }
     .word-box {
       background: #f8fafc;
@@ -157,57 +179,20 @@
   <h1>Green Line 1 📚</h1>
 
   <div class="filter-box">
-    <label for="unit-select">Lernbereich auswählen (max. 25 Vokabeln):</label>
-    <select id="unit-select" onchange="updateVocabPool()">
-      <optgroup label="--- Pick-up & Unit 1 ---">
-        <option value="section_0">Pick-up A & B</option>
-        <option value="section_1">Unit 1 (Check-in, Stations & Story)</option>
-      </optgroup>
-      <optgroup label="--- Unit 2: I'm new at TTS ---">
-        <option value="section_5_chk">Unit 2 – Check-in</option>
-        <option value="section_5_st1">Unit 2 – Station 1</option>
-        <option value="section_5_st2">Unit 2 – Station 2</option>
-        <option value="section_5_sty">Unit 2 – Story & Skills</option>
-        <option value="section_5_foc">Focus 1: The United Kingdom</option>
-      </optgroup>
-      <optgroup label="--- Unit 3: I like my busy days ---">
-        <option value="section_6_chk">Unit 3 – Check-in</option>
-        <option value="section_6_st1">Unit 3 – Station 1</option>
-        <option value="section_6_st2">Unit 3 – Station 2</option>
-        <option value="section_6_sty">Unit 3 – Story & Skills</option>
-        <option value="section_6_ac">Across cultures 1</option>
-      </optgroup>
-      <optgroup label="--- Unit 4: Let's do something fun ---">
-        <option value="section_7_chk">Unit 4 – Check-in</option>
-        <option value="section_7_st1">Unit 4 – Station 1</option>
-        <option value="section_7_st2">Unit 4 – Station 2</option>
-        <option value="section_7_sty">Unit 4 – Story & Skills</option>
-      </optgroup>
-      <optgroup label="--- Unit 5: Let's go shopping ---">
-        <option value="section_8_chk">Unit 5 – Check-in</option>
-        <option value="section_8_st1">Unit 5 – Station 1</option>
-        <option value="section_8_st2">Unit 5 – Station 2</option>
-        <option value="section_8_sty">Unit 5 – Story & Skills</option>
-        <option value="section_8_ac">Across cultures 2 & Focus 2</option>
-      </optgroup>
-      <optgroup label="--- Unit 6: It's my party! ---">
-        <option value="section_9_chk">Unit 6 – Check-in</option>
-        <option value="section_9_st1">Unit 6 – Station 1</option>
-        <option value="section_9_st2">Unit 6 – Station 2</option>
-        <option value="section_9_sty">Unit 6 – Story & Skills</option>
-        <option value="section_9_ac">Across cultures 3 & Focus 3</option>
-      </optgroup>
-      <optgroup label="--- Gesamt-Übersicht (Kumulativ) ---">
-        <option value="upto_5" selected>Komplett bis einschließlich Unit 2</option>
-        <option value="upto_6">Komplett bis einschließlich Unit 3</option>
-        <option value="upto_7">Komplett bis einschließlich Unit 4</option>
-        <option value="upto_8">Komplett bis einschließlich Unit 5</option>
-        <option value="upto_9">Kompletter Wortschatz (alle Units)</option>
-      </optgroup>
+    <label>Lernmodus wählen:</label>
+    <div class="mode-switch">
+      <button id="btn-mode-single" class="mode-btn active" onclick="setMode('single')">1. Einzelnes Unterkapitel</button>
+      <button id="btn-mode-unit" class="mode-btn" onclick="setMode('unit')">2. Ganze Unit komplett</button>
+    </div>
+
+    <label for="unit-select">Bereich auswählen:</label>
+    <select id="unit-select">
+      <!-- Wird dynamisch per JS befüllt -->
     </select>
+    <button class="action-btn" onclick="startQuizFromSelection()">Lernen starten 🚀</button>
   </div>
   
-  <div id="quiz-area">
+  <div id="quiz-area" class="hidden">
     <div class="top-bar">
       <span id="progress">Frage 1 von 25</span>
       <span id="credits-display" class="credits">❤️ Credits: 4</span>
@@ -232,208 +217,225 @@
   <div id="result-area" class="hidden">
     <h2 id="result-title">Geschafft! 🏆</h2>
     <p id="score-text" style="font-size: 18px; margin: 20px 0;"></p>
-    <button class="action-btn" onclick="updateVocabPool()">Nochmal lernen</button>
+    <button class="action-btn" onclick="resetToMenu()">Zurück zur Auswahl</button>
   </div>
 </div>
 
 <script>
   const allVocab = [
     // --- PU A & B & Unit 1 (Level 0-4) ---
-    { level: 0, sub: 0, english: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
-    { level: 0, sub: 0, english: "mouse", german: "Maus" },
-    { level: 0, sub: 0, english: "dog", german: "Hund" },
-    { level: 0, sub: 0, english: "cat", german: "Katze" },
-    { level: 0, sub: 0, english: "horse", german: "Pferd" },
-    { level: 0, sub: 0, english: "family", german: "Familie" },
-    { level: 0, sub: 0, english: "house", german: "Haus" },
-    { level: 0, sub: 0, english: "school", german: "Schule" },
-    { level: 0, sub: 0, english: "day", german: "Tag" },
-    { level: 0, sub: 0, english: "happy", german: "glücklich, froh, fröhlich" },
-    { level: 0, sub: 0, english: "can't", german: "kann nicht, können nicht" },
-    { level: 0, sub: 0, english: "to meet", german: "treffen, sich treffen" },
-    { level: 0, sub: 0, english: "to show", german: "zeigen" },
-    { level: 0, sub: 0, english: "sport", german: "Sport" },
-    { level: 0, sub: 0, english: "want", german: "wollen, mögen" },
-    { level: 0, sub: 0, english: "boring", german: "langweilig" },
-    { level: 0, sub: 0, english: "to play", german: "spielen" },
-    { level: 0, sub: 0, english: "fast", german: "schnell" },
-    { level: 0, sub: 0, english: "I'm sorry!", german: "Tut mir leid!" },
-    { level: 0, sub: 0, english: "Mr", german: "Herr (Anrede)" },
-    { level: 0, sub: 0, english: "cute", german: "niedlich, süß" },
-    { level: 0, sub: 0, english: "lucky charm", german: "Glücksbringer, Talisman" },
-    { level: 0, sub: 0, english: "text message", german: "SMS, Kurznachricht" },
-    { level: 0, sub: 0, english: "reading", german: "Lesen" },
-    { level: 0, sub: 0, english: "mask", german: "Maske" },
-    { level: 0, sub: 0, english: "to paint", german: "anmalen, malen" },
-    { level: 0, sub: 0, english: "to go swimming", german: "schwimmen gehen" },
-    { level: 0, sub: 0, english: "book", german: "Buch" },
-    { level: 0, sub: 0, english: "card", german: "Karte, Spielkarte" },
-    { level: 0, sub: 0, english: "magazine", german: "Zeitschrift, Magazin" },
-    { level: 0, sub: 0, english: "Me too.", german: "Ich auch." },
-    { level: 0, sub: 0, english: "DVD", german: "DVD" },
-    { level: 0, sub: 0, english: "bike", german: "Fahrrad" },
-    { level: 0, sub: 0, english: "silly", german: "dumm, doof, albern" },
-    { level: 1, sub: 0, english: "at home", german: "zu Hause" },
-    { level: 1, sub: 0, english: "problem", german: "Problem, Schwierigkeit" },
+    { unit: "pu", sub: "pu_ab", english: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
+    { unit: "pu", sub: "pu_ab", english: "mouse", german: "Maus" },
+    { unit: "pu", sub: "pu_ab", english: "dog", german: "Hund" },
+    { unit: "pu", sub: "pu_ab", english: "cat", german: "Katze" },
+    { unit: "pu", sub: "pu_ab", english: "horse", german: "Pferd" },
+    { unit: "pu", sub: "pu_ab", english: "family", german: "Familie" },
+    { unit: "pu", sub: "pu_ab", english: "house", german: "Haus" },
+    { unit: "pu", sub: "pu_ab", english: "school", german: "Schule" },
+    { unit: "pu", sub: "pu_ab", english: "day", german: "Tag" },
+    { unit: "pu", sub: "pu_ab", english: "happy", german: "glücklich, froh, fröhlich" },
+    { unit: "pu", sub: "pu_ab", english: "can't", german: "kann nicht, können nicht" },
+    { unit: "pu", sub: "pu_ab", english: "to meet", german: "treffen, sich treffen" },
+    { unit: "pu", sub: "pu_ab", english: "to show", german: "zeigen" },
+    { unit: "pu", sub: "pu_ab", english: "sport", german: "Sport" },
+    { unit: "pu", sub: "pu_ab", english: "want", german: "wollen, mögen" },
+    { unit: "pu", sub: "pu_ab", english: "boring", german: "langweilig" },
+    { unit: "pu", sub: "pu_ab", english: "to play", german: "spielen" },
+    { unit: "pu", sub: "pu_ab", english: "fast", german: "schnell" },
+    { unit: "pu", sub: "pu_ab", english: "I'm sorry!", german: "Tut mir leid!" },
+    { unit: "pu", sub: "pu_ab", english: "Mr", german: "Herr (Anrede)" },
+    { unit: "pu", sub: "pu_ab", english: "cute", german: "niedlich, süß" },
+    { unit: "pu", sub: "pu_ab", english: "lucky charm", german: "Glücksbringer, Talisman" },
+    { unit: "pu", sub: "pu_ab", english: "text message", german: "SMS, Kurznachricht" },
+    { unit: "pu", sub: "pu_ab", english: "reading", german: "Lesen" },
+    { unit: "pu", sub: "pu_ab", english: "mask", german: "Maske" },
+    { unit: "pu", sub: "pu_ab", english: "to paint", german: "anmalen, malen" },
+    { unit: "pu", sub: "pu_ab", english: "to go swimming", german: "schwimmen gehen" },
+    { unit: "pu", sub: "pu_ab", english: "book", german: "Buch" },
+    { unit: "pu", sub: "pu_ab", english: "card", german: "Karte, Spielkarte" },
+    { unit: "pu", sub: "pu_ab", english: "magazine", german: "Zeitschrift, Magazin" },
+    { unit: "pu", sub: "pu_ab", english: "Me too.", german: "Ich auch." },
+    { unit: "pu", sub: "pu_ab", english: "DVD", german: "DVD" },
+    { unit: "pu", sub: "pu_ab", english: "bike", german: "Fahrrad" },
+    { unit: "pu", sub: "pu_ab", english: "silly", german: "dumm, doof, albern" },
+    
+    { unit: "unit1", sub: "u1_all", english: "at home", german: "zu Hause" },
+    { unit: "unit1", sub: "u1_all", english: "problem", german: "Problem, Schwierigkeit" },
 
-    // --- Unit 2 (Level 5) ---
-    { level: 5, sub: "chk", english: "pen", german: "Kugelschreiber, Kuli" },
-    { level: 5, sub: "chk", english: "pencil", german: "Bleistift" },
-    { level: 5, sub: "chk", english: "pencil case", german: "Federmäppchen, Mäppchen" },
-    { level: 5, sub: "chk", english: "exercise book", german: "Übungsheft" },
-    { level: 5, sub: "chk", english: "rubber", german: "Radiergummi" },
-    { level: 5, sub: "chk", english: "uniform", german: "Schuluniform" },
-    { level: 5, sub: "chk", english: "recording studio", german: "Tonstudio, Aufnahmestudio" },
-    { level: 5, sub: "chk", english: "classroom", german: "Klassenzimmer" },
-    { level: 5, sub: "chk", english: "tutor", german: "Klassenlehrer/in" },
-    { level: 5, sub: "chk", english: "question", german: "Frage" },
-    { level: 5, sub: "st1", english: "schoolbag", german: "Schulranzen, Schultasche" },
-    { level: 5, sub: "st1", english: "tutor group", german: "Klasse (bei einer empfohlenen Tutor-Gruppe)" },
-    { level: 5, sub: "st1", english: "everyone", german: "alle, jeder" },
-    { level: 5, sub: "st1", english: "student", german: "Schüler/in, Student/in" },
-    { level: 5, sub: "st1", english: "to call", german: "nennen" },
-    { level: 5, sub: "st1", english: "him", german: "ihn" },
-    { level: 5, sub: "st1", english: "no", german: "nein" },
-    { level: 5, sub: "st1", english: "to sing", german: "singen" },
-    { level: 5, sub: "st1", english: "to dance", german: "tanzen" },
-    { level: 5, sub: "st1", english: "project", german: "Projekt" },
-    { level: 5, sub: "st1", english: "something", german: "etwas" },
-    { level: 5, sub: "st1", english: "Wait and see!", german: "Warte ab!" },
-    { level: 5, sub: "st2", english: "teacher", german: "Lehrer/in" },
-    { level: 5, sub: "st2", english: "board", german: "Tafel" },
-    { level: 5, sub: "st2", english: "group", german: "Gruppe" },
-    { level: 5, sub: "st2", english: "office", german: "Büro" },
-    { level: 5, sub: "st2", english: "grandparents", german: "Großeltern" },
-    { level: 5, sub: "st2", english: "talent show", german: "Talentshow" },
-    { level: 5, sub: "st2", english: "restaurant", german: "Restaurant, Gaststätte" },
-    { level: 5, sub: "st2", english: "pocket money", german: "Taschengeld" },
-    { level: 5, sub: "st2", english: "to use", german: "benutzen, verwenden, gebrauchen" },
-    { level: 5, sub: "st2", english: "building", german: "Gebäude" },
-    { level: 5, sub: "st2", english: "lesson", german: "Unterrichtsstunde, Schulstunde" },
-    { level: 5, sub: "st2", english: "Art", german: "Kunst" },
-    { level: 5, sub: "st2", english: "English", german: "Englisch" },
-    { level: 5, sub: "st2", english: "German", german: "Deutsch" },
-    { level: 5, sub: "st2", english: "Geography", german: "Erdkunde" },
-    { level: 5, sub: "st2", english: "Maths", german: "Mathematik" },
-    { level: 5, sub: "st2", english: "Science", german: "Naturwissenschaften" },
-    { level: 5, sub: "st2", english: "Music", german: "Musik" },
-    { level: 5, sub: "st2", english: "Latin", german: "Latein" },
-    { level: 5, sub: "st2", english: "French", german: "Französisch" },
-    { level: 5, sub: "st2", english: "History", german: "Geschichte" },
-    { level: 5, sub: "st2", english: "PE (Physical Education)", german: "Sport" },
-    { level: 5, sub: "st2", english: "RE (Religious Education)", german: "Religion" },
-    { level: 5, sub: "st2", english: "to stare", german: "anstarren" },
-    { level: 5, sub: "st2", english: "rude", german: "unhöflich, unverschämt" },
-    { level: 5, sub: "sty", english: "funny", german: "lustig, witzig" },
-    { level: 5, sub: "sty", english: "lunch break", german: "Mittagspause" },
-    { level: 5, sub: "sty", english: "mum", german: "Mama" },
-    { level: 5, sub: "sty", english: "to forget", german: "vergessen" },
-    { level: 5, sub: "sty", english: "to do", german: "machen, tun" },
-    { level: 5, sub: "sty", english: "alone", german: "allein, alleine" },
-    { level: 5, sub: "sty", english: "to bring", german: "bringen, mitbringen" },
-    { level: 5, sub: "sty", english: "to wear", german: "tragen (Kleidung)" },
-    { level: 5, sub: "sty", english: "homework", german: "Hausaufgaben" },
-    { level: 5, sub: "sty", english: "already", german: "schon, bereits" },
-    { level: 5, sub: "sty", english: "to add", german: "hinzufügen, ergänzen" },
-    { level: 5, sub: "sty", english: "end", german: "Ende, Schluss" },
-    { level: 5, sub: "sty", english: "these", german: "diese (Plural)" },
-    { level: 5, sub: "sty", english: "that", german: "jene/r/s" },
-    { level: 5, sub: "sty", english: "to find", german: "finden, herausfinden" },
-    { level: 5, sub: "sty", english: "place", german: "Ort, Seite, Platz" },
-    { level: 5, sub: "sty", english: "to learn", german: "lernen" },
-    { level: 5, sub: "sty", english: "week", german: "Woche" },
-    { level: 5, sub: "sty", english: "before", german: "vor" },
-    { level: 5, sub: "sty", english: "to work", german: "arbeiten" },
-    { level: 5, sub: "sty", english: "pair", german: "Paar" },
-    { level: 5, sub: "sty", english: "presentation", german: "Präsentation, Vortrag" },
-    { level: 5, sub: "sty", english: "recording", german: "Aufnahme, Aufzeichnung" },
-    { level: 5, sub: "sty", english: "poem", german: "Gedicht" },
-    { level: 5, sub: "sty", english: "sure", german: "sicher" },
-    { level: 5, sub: "sty", english: "voice", german: "Stimme" },
-    { level: 5, sub: "sty", english: "next", german: "nächste/r/s" },
-    { level: 5, sub: "sty", english: "popular", german: "beliebt, populär" },
-    { level: 5, sub: "sty", english: "kind", german: "Klasse, Schulklasse" },
-    { level: 5, sub: "foc", english: "castle", german: "Schloss, Burg" },
-    { level: 5, sub: "foc", english: "flag", german: "Fahne, Flagge" },
-    { level: 5, sub: "foc", english: "beach", german: "Strand" },
-    { level: 5, sub: "foc", english: "sea", german: "Meer" },
-    { level: 5, sub: "foc", english: "mountain", german: "Berg" },
-    { level: 5, sub: "foc", english: "forest", german: "Wald" },
+    // --- Unit 2 ---
+    { unit: "unit2", sub: "u2_chk", english: "pen", german: "Kugelschreiber, Kuli" },
+    { unit: "unit2", sub: "u2_chk", english: "pencil", german: "Bleistift" },
+    { unit: "unit2", sub: "u2_chk", english: "pencil case", german: "Federmäppchen, Mäppchen" },
+    { unit: "unit2", sub: "u2_chk", english: "exercise book", german: "Übungsheft" },
+    { unit: "unit2", sub: "u2_chk", english: "rubber", german: "Radiergummi" },
+    { unit: "unit2", sub: "u2_chk", english: "uniform", german: "Schuluniform" },
+    { unit: "unit2", sub: "u2_chk", english: "recording studio", german: "Tonstudio, Aufnahmestudio" },
+    { unit: "unit2", sub: "u2_chk", english: "classroom", german: "Klassenzimmer" },
+    { unit: "unit2", sub: "u2_chk", english: "tutor", german: "Klassenlehrer/in" },
+    { unit: "unit2", sub: "u2_chk", english: "question", german: "Frage" },
+    
+    { unit: "unit2", sub: "u2_st1", english: "schoolbag", german: "Schulranzen, Schultasche" },
+    { unit: "unit2", sub: "u2_st1", english: "tutor group", german: "Klasse (bei einer empfohlenen Tutor-Gruppe)" },
+    { unit: "unit2", sub: "u2_st1", english: "everyone", german: "alle, jeder" },
+    { unit: "unit2", sub: "u2_st1", english: "student", german: "Schüler/in, Student/in" },
+    { unit: "unit2", sub: "u2_st1", english: "to call", german: "nennen" },
+    { unit: "unit2", sub: "u2_st1", english: "him", german: "ihn" },
+    { unit: "unit2", sub: "u2_st1", english: "no", german: "nein" },
+    { unit: "unit2", sub: "u2_st1", english: "to sing", german: "singen" },
+    { unit: "unit2", sub: "u2_st1", english: "to dance", german: "tanzen" },
+    { unit: "unit2", sub: "u2_st1", english: "project", german: "Projekt" },
+    { unit: "unit2", sub: "u2_st1", english: "something", german: "etwas" },
+    { unit: "unit2", sub: "u2_st1", english: "Wait and see!", german: "Warte ab!" },
+    
+    { unit: "unit2", sub: "u2_st2", english: "teacher", german: "Lehrer/in" },
+    { unit: "unit2", sub: "u2_st2", english: "board", german: "Tafel" },
+    { unit: "unit2", sub: "u2_st2", english: "group", german: "Gruppe" },
+    { unit: "unit2", sub: "u2_st2", english: "office", german: "Büro" },
+    { unit: "unit2", sub: "u2_st2", english: "grandparents", german: "Großeltern" },
+    { unit: "unit2", sub: "u2_st2", english: "talent show", german: "Talentshow" },
+    { unit: "unit2", sub: "u2_st2", english: "restaurant", german: "Restaurant, Gaststätte" },
+    { unit: "unit2", sub: "u2_st2", english: "pocket money", german: "Taschengeld" },
+    { unit: "unit2", sub: "u2_st2", english: "to use", german: "benutzen, verwenden, gebrauchen" },
+    { unit: "unit2", sub: "u2_st2", english: "building", german: "Gebäude" },
+    { unit: "unit2", sub: "u2_st2", english: "lesson", german: "Unterrichtsstunde, Schulstunde" },
+    { unit: "unit2", sub: "u2_st2", english: "Art", german: "Kunst" },
+    { unit: "unit2", sub: "u2_st2", english: "English", german: "Englisch" },
+    { unit: "unit2", sub: "u2_st2", english: "German", german: "Deutsch" },
+    { unit: "unit2", sub: "u2_st2", english: "Geography", german: "Erdkunde" },
+    { unit: "unit2", sub: "u2_st2", english: "Maths", german: "Mathematik" },
+    { unit: "unit2", sub: "u2_st2", english: "Science", german: "Naturwissenschaften" },
+    { unit: "unit2", sub: "u2_st2", english: "Music", german: "Musik" },
+    { unit: "unit2", sub: "u2_st2", english: "Latin", german: "Latein" },
+    { unit: "unit2", sub: "u2_st2", english: "French", german: "Französisch" },
+    { unit: "unit2", sub: "u2_st2", english: "History", german: "Geschichte" },
+    { unit: "unit2", sub: "u2_st2", english: "PE (Physical Education)", german: "Sport" },
+    { unit: "unit2", sub: "u2_st2", english: "RE (Religious Education)", german: "Religion" },
+    { unit: "unit2", sub: "u2_st2", english: "to stare", german: "anstarren" },
+    { unit: "unit2", sub: "u2_st2", english: "rude", german: "unhöflich, unverschämt" },
+    
+    { unit: "unit2", sub: "u2_sty", english: "funny", german: "lustig, witzig" },
+    { unit: "unit2", sub: "u2_sty", english: "lunch break", german: "Mittagspause" },
+    { unit: "unit2", sub: "u2_sty", english: "mum", german: "Mama" },
+    { unit: "unit2", sub: "u2_sty", english: "to forget", german: "vergessen" },
+    { unit: "unit2", sub: "u2_sty", english: "to do", german: "machen, tun" },
+    { unit: "unit2", sub: "u2_sty", english: "alone", german: "allein, alleine" },
+    { unit: "unit2", sub: "u2_sty", english: "to bring", german: "bringen, mitbringen" },
+    { unit: "unit2", sub: "u2_sty", english: "to wear", german: "tragen (Kleidung)" },
+    { unit: "unit2", sub: "u2_sty", english: "homework", german: "Hausaufgaben" },
+    { unit: "unit2", sub: "u2_sty", english: "already", german: "schon, bereits" },
+    { unit: "unit2", sub: "u2_sty", english: "to add", german: "hinzufügen, ergänzen" },
+    { unit: "unit2", sub: "u2_sty", english: "end", german: "Ende, Schluss" },
+    { unit: "unit2", sub: "u2_sty", english: "these", german: "diese (Plural)" },
+    { unit: "unit2", sub: "u2_sty", english: "that", german: "jene/r/s" },
+    { unit: "unit2", sub: "u2_sty", english: "to find", german: "finden, herausfinden" },
+    { unit: "unit2", sub: "u2_sty", english: "place", german: "Ort, Seite, Platz" },
+    { unit: "unit2", sub: "u2_sty", english: "to learn", german: "lernen" },
+    { unit: "unit2", sub: "u2_sty", english: "week", german: "Woche" },
+    { unit: "unit2", sub: "u2_sty", english: "before", german: "vor" },
+    { unit: "unit2", sub: "u2_sty", english: "to work", german: "arbeiten" },
+    { unit: "unit2", sub: "u2_sty", english: "pair", german: "Paar" },
+    { unit: "unit2", sub: "u2_sty", english: "presentation", german: "Präsentation, Vortrag" },
+    { unit: "unit2", sub: "u2_sty", english: "recording", german: "Aufnahme, Aufzeichnung" },
+    { unit: "unit2", sub: "u2_sty", english: "poem", german: "Gedicht" },
+    { unit: "unit2", sub: "u2_sty", english: "sure", german: "sicher" },
+    { unit: "unit2", sub: "u2_sty", english: "voice", german: "Stimme" },
+    { unit: "unit2", sub: "u2_sty", english: "next", german: "nächste/r/s" },
+    { unit: "unit2", sub: "u2_sty", english: "popular", german: "beliebt, populär" },
+    { unit: "unit2", sub: "u2_sty", english: "kind", german: "Klasse, Schulklasse" },
+    { unit: "unit2", sub: "u2_sty", english: "castle", german: "Schloss, Burg" },
+    { unit: "unit2", sub: "u2_sty", english: "flag", german: "Fahne, Flagge" },
+    { unit: "unit2", sub: "u2_sty", english: "beach", german: "Strand" },
+    { unit: "unit2", sub: "u2_sty", english: "sea", german: "Meer" },
+    { unit: "unit2", sub: "u2_sty", english: "mountain", german: "Berg" },
+    { unit: "unit2", sub: "u2_sty", english: "forest", german: "Wald" },
 
-    // --- Unit 3 (Level 6) ---
-    { level: 6, sub: "chk", english: "cheese", german: "Käse" },
-    { level: 6, sub: "chk", english: "Monday", german: "Montag" },
-    { level: 6, sub: "chk", english: "Tuesday", german: "Dienstag" },
-    { level: 6, sub: "chk", english: "Wednesday", german: "Mittwoch" },
-    { level: 6, sub: "chk", english: "Thursday", german: "Donnerstag" },
-    { level: 6, sub: "chk", english: "Friday", german: "Freitag" },
-    { level: 6, sub: "chk", english: "Saturday", german: "Samstag" },
-    { level: 6, sub: "chk", english: "Sunday", german: "Sonntag" },
-    { level: 6, sub: "st1", english: "breakfast", german: "Frühstück" },
-    { level: 6, sub: "st1", english: "to get up", german: "aufstehen" },
-    { level: 6, sub: "st1", english: "every", german: "jeden, jede, jedes" },
-    { level: 6, sub: "st1", english: "dinner", german: "Abendessen" },
-    { level: 6, sub: "st2", english: "tired", german: "müde" },
-    { level: 6, sub: "st2", english: "to look for", german: "suchen nach" },
-    { level: 6, sub: "st2", english: "roommate", german: "Zimmergenosse/Zimmergenossin" },
-    { level: 6, sub: "st2", english: "to snore", german: "schnarchen" },
-    { level: 6, sub: "sty", english: "coach", german: "Trainer/in" },
-    { level: 6, sub: "sty", english: "tomorrow", german: "morgen" },
-    { level: 6, sub: "sty", english: "to look after", german: "aufpassen auf, sich kümmern um" },
-    { level: 6, sub: "sty", english: "granny", german: "Oma" },
-    { level: 6, sub: "ac", english: "mouth", german: "Mund" },
-    { level: 6, sub: "ac", english: "sound", german: "Geräusch, Klang" },
+    // --- Unit 3 ---
+    { unit: "unit3", sub: "u3_chk", english: "cheese", german: "Käse" },
+    { unit: "unit3", sub: "u3_chk", english: "Monday", german: "Montag" },
+    { unit: "unit3", sub: "u3_chk", english: "Tuesday", german: "Dienstag" },
+    { unit: "unit3", sub: "u3_chk", english: "Wednesday", german: "Mittwoch" },
+    { unit: "unit3", sub: "u3_chk", english: "Thursday", german: "Donnerstag" },
+    { unit: "unit3", sub: "u3_chk", english: "Friday", german: "Freitag" },
+    { unit: "unit3", sub: "u3_chk", english: "Saturday", german: "Samstag" },
+    { unit: "unit3", sub: "u3_chk", english: "Sunday", german: "Sonntag" },
+    
+    { unit: "unit3", sub: "u3_st1", english: "breakfast", german: "Frühstück" },
+    { unit: "unit3", sub: "u3_st1", english: "to get up", german: "aufstehen" },
+    { unit: "unit3", sub: "u3_st1", english: "every", german: "jeden, jede, jedes" },
+    { unit: "unit3", sub: "u3_st1", english: "dinner", german: "Abendessen" },
+    
+    { unit: "unit3", sub: "u3_st2", english: "tired", german: "müde" },
+    { unit: "unit3", sub: "u3_st2", english: "to look for", german: "suchen nach" },
+    { unit: "unit3", sub: "u3_st2", english: "roommate", german: "Zimmergenosse/Zimmergenossin" },
+    { unit: "unit3", sub: "u3_st2", english: "to snore", german: "schnarchen" },
+    
+    { unit: "unit3", sub: "u3_sty", english: "coach", german: "Trainer/in" },
+    { unit: "unit3", sub: "u3_sty", english: "tomorrow", german: "morgen" },
+    { unit: "unit3", sub: "u3_sty", english: "to look after", german: "aufpassen auf, sich kümmern um" },
+    { unit: "unit3", sub: "u3_sty", english: "granny", german: "Oma" },
+    { unit: "unit3", sub: "u3_sty", english: "mouth", german: "Mund" },
+    { unit: "unit3", sub: "u3_sty", english: "sound", german: "Geräusch, Klang" },
 
-    // --- Unit 4 (Level 7) ---
-    { level: 7, sub: "chk", english: "to get fit", german: "in Form kommen, fit werden" },
-    { level: 7, sub: "chk", english: "rhythm", german: "Rhythmus" },
-    { level: 7, sub: "chk", english: "to stand up", german: "aufstehen" },
-    { level: 7, sub: "st1", english: "face", german: "Gesicht" },
-    { level: 7, sub: "st1", english: "ear", german: "Ohr" },
-    { level: 7, english: "eye", german: "Auge" },
-    { level: 7, english: "nose", german: "Nase" },
-    { level: 7, sub: "st2", english: "excuse me", german: "Entschuldigung!" },
-    { level: 7, english: "of course", german: "natürlich" },
-    { level: 7, sub: "sty", english: "captain", german: "Kapitän/in" },
-    { level: 7, sub: "sty", english: "cabin boy", german: "Schiffsjunge" },
-    { level: 7, sub: "sty", english: "storm", german: "Sturm" },
+    // --- Unit 4 ---
+    { unit: "unit4", sub: "u4_chk", english: "to get fit", german: "in Form kommen, fit werden" },
+    { unit: "unit4", sub: "u4_chk", english: "rhythm", german: "Rhythmus" },
+    { unit: "unit4", sub: "u4_chk", english: "to stand up", german: "aufstehen" },
+    
+    { unit: "unit4", sub: "u4_st1", english: "face", german: "Gesicht" },
+    { unit: "unit4", sub: "u4_st1", english: "ear", german: "Ohr" },
+    { unit: "unit4", sub: "u4_st1", english: "eye", german: "Auge" },
+    { unit: "unit4", sub: "u4_st1", english: "nose", german: "Nase" },
+    
+    { unit: "unit4", sub: "u4_st2", english: "excuse me", german: "Entschuldigung!" },
+    { unit: "unit4", sub: "u4_st2", english: "of course", german: "natürlich" },
+    
+    { unit: "unit4", sub: "u4_sty", english: "captain", german: "Kapitän/in" },
+    { unit: "unit4", sub: "u4_sty", english: "cabin boy", german: "Schiffsjunge" },
+    { unit: "unit4", sub: "u4_sty", english: "storm", german: "Sturm" },
 
-    // --- Unit 5 (Level 8) ---
-    { level: 8, sub: "chk", english: "to be sorry", german: "leid tun" },
-    { level: 8, sub: "chk", english: "How much (is/are) ...?", german: "Wie viel (kostet/kosten) ...?" },
-    { level: 8, sub: "chk", english: "pound", german: "Pfund" },
-    { level: 8, sub: "chk", english: "expensive", german: "teuer" },
-    { level: 8, sub: "chk", english: "cheap", german: "billig, preiswert" },
-    { level: 8, sub: "st1", english: "T-shirt", german: "T-Shirt" },
-    { level: 8, sub: "st1", english: "shoe", german: "Schuh" },
-    { level: 8, sub: "st1", english: "jeans", german: "Jeans" },
-    { level: 8, sub: "st1", english: "shirt", german: "Hemd" },
-    { level: 8, sub: "st1", english: "pullover", german: "Pullover" },
-    { level: 8, sub: "st2", english: "answering machine", german: "Anrufbeantworter" },
-    { level: 8, sub: "st2", english: "message", german: "Nachricht" },
-    { level: 8, sub: "st2", english: "to call", german: "anrufen" },
-    { level: 8, sub: "sty", english: "dictionary", german: "Wörterbuch" },
-    { level: 8, sub: "sty", english: "buyer", german: "Käufer/in" },
-    { level: 8, sub: "sty", english: "seller", german: "Verkäufer/in" },
-    { level: 8, sub: "ac", english: "yoghurt", german: "Joghurt" },
+    // --- Unit 5 ---
+    { unit: "unit5", sub: "u5_chk", english: "to be sorry", german: "leid tun" },
+    { unit: "unit5", sub: "u5_chk", english: "How much (is/are) ...?", german: "Wie viel (kostet/kosten) ...?" },
+    { unit: "unit5", sub: "u5_chk", english: "pound", german: "Pfund" },
+    { unit: "unit5", sub: "u5_chk", english: "expensive", german: "teuer" },
+    { unit: "unit5", sub: "u5_chk", english: "cheap", german: "billig, preiswert" },
+    
+    { unit: "unit5", sub: "u5_st1", english: "T-shirt", german: "T-Shirt" },
+    { unit: "unit5", sub: "u5_st1", english: "shoe", german: "Schuh" },
+    { unit: "unit5", sub: "u5_st1", english: "jeans", german: "Jeans" },
+    { unit: "unit5", sub: "u5_st1", english: "shirt", german: "Hemd" },
+    { unit: "unit5", sub: "u5_st1", english: "pullover", german: "Pullover" },
+    
+    { unit: "unit5", sub: "u5_st2", english: "answering machine", german: "Anrufbeantworter" },
+    { unit: "unit5", sub: "u5_st2", english: "message", german: "Nachricht" },
+    { unit: "unit5", sub: "u5_st2", english: "to call", german: "anrufen" },
+    
+    { unit: "unit5", sub: "u5_sty", english: "dictionary", german: "Wörterbuch" },
+    { unit: "unit5", sub: "u5_sty", english: "buyer", german: "Käufer/in" },
+    { unit: "unit5", sub: "u5_sty", english: "seller", german: "Verkäufer/in" },
+    { unit: "unit5", sub: "u5_sty", english: "yoghurt", german: "Joghurt" },
 
-    // --- Unit 6 (Level 9) ---
-    { level: 9, sub: "chk", english: "independent", german: "unabhängig" },
-    { level: 9, sub: "chk", english: "American", german: "Amerikaner/in" },
-    { level: 9, sub: "chk", english: "government", german: "Regierung" },
-    { level: 9, sub: "st1", english: "cereal", german: "Frühstücksflocken" },
-    { level: 9, sub: "st1", english: "chocolate", german: "Schokolade" },
-    { level: 9, sub: "st1", english: "crisp", german: "Kartoffelchip" },
-    { level: 9, sub: "st2", english: "party", german: "Party" },
-    { level: 9, sub: "st2", english: "invitation", german: "Einladung" },
-    { level: 9, sub: "st2", english: "to invite", german: "einladen" },
-    { level: 9, sub: "sty", english: "sponge", german: "Rührkuchen" },
-    { level: 9, sub: "sty", english: "jelly", german: "Wackelpudding, Gelee" },
-    { level: 9, sub: "sty", english: "custard", german: "Vanillesoße" },
-    { level: 9, sub: "ac", english: "skyscraper", german: "Wolkenkratzer" },
-    { level: 9, english: "freedom", german: "Freiheit" }
+    // --- Unit 6 ---
+    { unit: "unit6", sub: "u6_chk", english: "independent", german: "unabhängig" },
+    { unit: "unit6", sub: "u6_chk", english: "American", german: "Amerikaner/in" },
+    { unit: "unit6", sub: "u6_chk", english: "government", german: "Regierung" },
+    
+    { unit: "unit6", sub: "u6_st1", english: "cereal", german: "Frühstücksflocken" },
+    { unit: "unit6", sub: "u6_st1", english: "chocolate", german: "Schokolade" },
+    { unit: "unit6", sub: "u6_st1", english: "crisp", german: "Kartoffelchip" },
+    
+    { unit: "unit6", sub: "u6_st2", english: "party", german: "Party" },
+    { unit: "unit6", sub: "u6_st2", english: "invitation", german: "Einladung" },
+    { unit: "unit6", sub: "u6_st2", english: "to invite", german: "einladen" },
+    
+    { unit: "unit6", sub: "u6_sty", english: "sponge", german: "Rührkuchen" },
+    { unit: "unit6", sub: "u6_sty", english: "jelly", german: "Wackelpudding, Gelee" },
+    { unit: "unit6", sub: "u6_sty", english: "custard", german: "Vanillesoße" },
+    { unit: "unit6", sub: "u6_sty", english: "skyscraper", german: "Wolkenkratzer" },
+    { unit: "unit6", sub: "u6_sty", english: "freedom", german: "Freiheit" }
   ];
 
+  let currentMode = 'single'; // 'single' oder 'unit'
   let activeVocabList = [];
   let currentIndex = 0;
   let score = 0;
@@ -452,6 +454,69 @@
   const checkBtn = document.getElementById('check-btn');
   const nextBtn = document.getElementById('next-btn');
   const feedbackEl = document.getElementById('feedback');
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-mode-single').classList.toggle('active', mode === 'single');
+    document.getElementById('btn-mode-unit').classList.toggle('active', mode === 'unit');
+    updateDropdownOptions();
+  }
+
+  function updateDropdownOptions() {
+    unitSelect.innerHTML = '';
+
+    if (currentMode === 'single') {
+      const sections = [
+        { val: "pu_ab", label: "Pick-up A & B" },
+        { val: "u1_all", label: "Unit 1 (Komplett)" },
+        { val: "u2_chk", label: "Unit 2 – Check-in" },
+        { val: "u2_st1", label: "Unit 2 – Station 1" },
+        { val: "u2_st2", label: "Unit 2 – Station 2" },
+        { val: "u2_sty", label: "Unit 2 – Story, Skills & Focus" },
+        { val: "u3_chk", label: "Unit 3 – Check-in" },
+        { val: "u3_st1", label: "Unit 3 – Station 1" },
+        { val: "u3_st2", label: "Unit 3 – Station 2" },
+        { val: "u3_sty", label: "Unit 3 – Story, Skills & Across Cultures" },
+        { val: "u4_chk", label: "Unit 4 – Check-in" },
+        { val: "u4_st1", label: "Unit 4 – Station 1" },
+        { val: "u4_st2", label: "Unit 4 – Station 2" },
+        { val: "u4_sty", label: "Unit 4 – Story & Skills" },
+        { val: "u5_chk", label: "Unit 5 – Check-in" },
+        { val: "u5_st1", label: "Unit 5 – Station 1" },
+        { val: "u5_st2", label: "Unit 5 – Station 2" },
+        { val: "u5_sty", label: "Unit 5 – Story, Skills, Across Cultures & Focus" },
+        { val: "u6_chk", label: "Unit 6 – Check-in" },
+        { val: "u6_st1", label: "Unit 6 – Station 1" },
+        { val: "u6_st2", label: "Unit 6 – Station 2" },
+        { val: "u6_sty", label: "Unit 6 – Story, Skills, Across Cultures & Focus" }
+      ];
+
+      sections.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec.val;
+        opt.textContent = sec.label;
+        unitSelect.appendChild(opt);
+      });
+
+    } else {
+      const units = [
+        { val: "pu", label: "Pick-up A & B (Ganze Unit)" },
+        { val: "unit1", label: "Unit 1 (Ganze Unit)" },
+        { val: "unit2", label: "Unit 2 (Ganze Unit)" },
+        { val: "unit3", label: "Unit 3 (Ganze Unit)" },
+        { val: "unit4", label: "Unit 4 (Ganze Unit)" },
+        { val: "unit5", label: "Unit 5 (Ganze Unit)" },
+        { val: "unit6", label: "Unit 6 (Ganze Unit)" }
+      ];
+
+      units.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.val;
+        opt.textContent = u.label;
+        unitSelect.appendChild(opt);
+      });
+    }
+  }
 
   function isSentence(text) {
     return text.includes(' ') || text.includes('.') || text.includes('!') || text.includes('?');
@@ -512,41 +577,38 @@
     return dp[m][n];
   }
 
-  function updateVocabPool() {
+  function startQuizFromSelection() {
     const selection = unitSelect.value;
     let pool = [];
 
-    if (selection.startsWith('section_')) {
-      const parts = selection.replace('section_', '').split('_');
-      const targetLevel = parseInt(parts[0], 10);
-      const subType = parts[1];
-
-      if (!subType) {
-        pool = allVocab.filter(v => v.level === targetLevel);
-      } else {
-        pool = allVocab.filter(v => v.level === targetLevel && v.sub === subType);
-      }
-    } else if (selection.startsWith('upto_')) {
-      const targetLevel = parseInt(selection.replace('upto_', ''), 10);
-      pool = allVocab.filter(v => v.level <= targetLevel);
+    if (currentMode === 'single') {
+      pool = allVocab.filter(v => v.sub === selection);
+    } else {
+      pool = allVocab.filter(v => v.unit === selection);
     }
 
     if (pool.length === 0) {
-      pool = allVocab; // Fallback
+      pool = allVocab;
     }
 
     pool.sort(() => Math.random() - 0.5);
     activeVocabList = pool.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
 
+    document.getElementById('result-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+
     restartQuiz();
+  }
+
+  function resetToMenu() {
+    document.getElementById('quiz-area').classList.add('hidden');
+    document.getElementById('result-area').classList.add('hidden');
   }
 
   function restartQuiz() {
     currentIndex = 0;
     score = 0;
     credits = 4;
-    document.getElementById('result-area').classList.add('hidden');
-    document.getElementById('quiz-area').classList.remove('hidden');
     updateCreditsDisplay();
     loadWord();
   }
@@ -745,7 +807,8 @@
     }
   });
 
-  updateVocabPool();
+  // Initialisierung beim Laden
+  updateDropdownOptions();
 </script>
 
 </body>
