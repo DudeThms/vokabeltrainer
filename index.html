@@ -223,7 +223,7 @@
 
 <script>
   const allVocab = [
-    // --- PU A & B & Unit 1 (Level 0-4) ---
+    // --- Pick-up A & B ---
     { unit: "pu", sub: "pu_ab", english: "I'm from Greenwich.", german: "Ich bin aus Greenwich." },
     { unit: "pu", sub: "pu_ab", english: "mouse", german: "Maus" },
     { unit: "pu", sub: "pu_ab", english: "dog", german: "Hund" },
@@ -258,9 +258,51 @@
     { unit: "pu", sub: "pu_ab", english: "DVD", german: "DVD" },
     { unit: "pu", sub: "pu_ab", english: "bike", german: "Fahrrad" },
     { unit: "pu", sub: "pu_ab", english: "silly", german: "dumm, doof, albern" },
-    
-    { unit: "unit1", sub: "u1_all", english: "at home", german: "zu Hause" },
-    { unit: "unit1", sub: "u1_all", english: "problem", german: "Problem, Schwierigkeit" },
+
+    // --- Unit 1 (Unterteilt in Check-in, Station 1, Station 2, Story & Check-out) ---
+    { unit: "unit1", sub: "u1_chk", english: "at home", german: "zu Hause" },
+    { unit: "unit1", sub: "u1_chk", english: "family", german: "Familie" },
+    { unit: "unit1", sub: "u1_chk", english: "to live", german: "wohnen, leben" },
+    { unit: "unit1", sub: "u1_chk", english: "flat", german: "Wohnung" },
+    { unit: "unit1", sub: "u1_chk", english: "house", german: "Haus" },
+    { unit: "unit1", sub: "u1_chk", english: "door", german: "Tür" },
+    { unit: "unit1", sub: "u1_chk", english: "chair", german: "Stuhl, Sessel" },
+    { unit: "unit1", sub: "u1_chk", english: "table", german: "Tisch" },
+    { unit: "unit1", sub: "u1_chk", english: "kitchen", german: "Küche" },
+    { unit: "unit1", sub: "u1_chk", english: "living room", german: "Wohnzimmer" },
+    { unit: "unit1", sub: "u1_chk", english: "bathroom", german: "Badezimmer" },
+
+    { unit: "unit1", sub: "u1_st1", english: "sister", german: "Schwester" },
+    { unit: "unit1", sub: "u1_st1", english: "brother", german: "Bruder" },
+    { unit: "unit1", sub: "u1_st1", english: "father", german: "Vater" },
+    { unit: "unit1", sub: "u1_st1", english: "mother", german: "Mutter" },
+    { unit: "unit1", sub: "u1_st1", english: "cousin", german: "Cousin, Cousine" },
+    { unit: "unit1", sub: "u1_st1", english: "uncle", german: "Onkel" },
+    { unit: "unit1", sub: "u1_st1", english: "aunt", german: "Tante" },
+    { unit: "unit1", sub: "u1_st1", english: "grandad", german: "Opa" },
+    { unit: "unit1", sub: "u1_st1", english: "grandma", german: "Oma" },
+    { unit: "unit1", sub: "u1_st1", english: "nice", german: "nett" },
+    { unit: "unit1", sub: "u1_st1", english: "cool", german: "cool" },
+
+    { unit: "unit1", sub: "u1_st2", english: "problem", german: "Problem, Schwierigkeit" },
+    { unit: "unit1", sub: "u1_st2", english: "garden", german: "Garten" },
+    { unit: "unit1", sub: "u1_st2", english: "behind", german: "hinter" },
+    { unit: "unit1", sub: "u1_st2", english: "in front of", german: "vor" },
+    { unit: "unit1", sub: "u1_st2", english: "next to", german: "neben" },
+    { unit: "unit1", sub: "u1_st2", english: "loft", german: "Dachboden" },
+    { unit: "unit1", sub: "u1_st2", english: "idea", german: "Idee, Einfall" },
+    { unit: "unit1", sub: "u1_st2", english: "car", german: "Auto" },
+
+    { unit: "unit1", sub: "u1_sty", english: "address", german: "Adresse" },
+    { unit: "unit1", sub: "u1_sty", english: "fridge", german: "Kühlschrank" },
+    { unit: "unit1", sub: "u1_sty", english: "wall", german: "Wand, Mauer" },
+    { unit: "unit1", sub: "u1_sty", english: "answer", german: "Antwort" },
+    { unit: "unit1", sub: "u1_sty", english: "mirror", german: "Spiegel" },
+    { unit: "unit1", sub: "u1_sty", english: "lamp", german: "Lampe" },
+    { unit: "unit1", sub: "u1_sty", english: "poster", german: "Poster" },
+    { unit: "unit1", sub: "u1_sty", english: "guitar", german: "Gitarre" },
+    { unit: "unit1", sub: "u1_sty", english: "skateboard", german: "Skateboard" },
+    { unit: "unit1", sub: "u1_sty", english: "computer", german: "Computer" },
 
     // --- Unit 2 ---
     { unit: "unit2", sub: "u2_chk", english: "pen", german: "Kugelschreiber, Kuli" },
@@ -468,7 +510,10 @@
     if (currentMode === 'single') {
       const sections = [
         { val: "pu_ab", label: "Pick-up A & B" },
-        { val: "u1_all", label: "Unit 1 (Komplett)" },
+        { val: "u1_chk", label: "Unit 1 – Check-in" },
+        { val: "u1_st1", label: "Unit 1 – Station 1" },
+        { val: "u1_st2", label: "Unit 1 – Station 2" },
+        { val: "u1_sty", label: "Unit 1 – Story & Check-out" },
         { val: "u2_chk", label: "Unit 2 – Check-in" },
         { val: "u2_st1", label: "Unit 2 – Station 1" },
         { val: "u2_st2", label: "Unit 2 – Station 2" },
