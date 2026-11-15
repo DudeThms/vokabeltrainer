@@ -145,10 +145,6 @@
       cursor: pointer;
     }
     .action-btn:hover:not(:disabled) { background-color: #1d4ed8; }
-    .action-btn:disabled {
-      background-color: #94a3b8;
-      cursor: wait;
-    }
     .btn-next { background-color: #10b981; margin-top: 10px; }
     .btn-next:hover { background-color: #059669; }
     
@@ -345,11 +341,11 @@
   </div>
 </div>
 
-<script>
-  // Leere Speicher für die extern geladenen Wortschätze
-  let englishVocab = [];
-  let latinVocab = [];
+<!-- Externe Wortschatz-Dateien einbinden -->
+<script src="englisch.js"></script>
+<script src="latein.js"></script>
 
+<script>
   let currentLang = 'en'; // 'en' oder 'la'
   let appMode = 'learn'; // 'learn' oder 'quiz'
   let structMode = 'single'; // 'single' oder 'unit'
@@ -366,7 +362,6 @@
   let isMcMode = false;
 
   const unitSelect = document.getElementById('unit-select');
-  const startBtn = document.getElementById('start-btn');
   const progressEl = document.getElementById('progress');
   const creditsDisplay = document.getElementById('credits-display');
   const langLabelEl = document.getElementById('lang-label');
@@ -378,62 +373,19 @@
   const nextBtn = document.getElementById('next-btn');
   const feedbackEl = document.getElementById('feedback');
 
-  // Lädt den Wortschatz dynamisch aus englisch.html oder latein.html
-  async function ensureVocabLoaded(lang) {
-    if (lang === 'en' && englishVocab.length > 0) return true;
-    if (lang === 'la' && latinVocab.length > 0) return true;
-
-    const fileName = lang === 'en' ? 'englisch.html' : 'latein.html';
-    const varName = lang === 'en' ? 'englishVocab' : 'latinVocab';
-
-    startBtn.disabled = true;
-    startBtn.textContent = 'Lade Wortschatz... ⏳';
-
-    try {
-      const response = await fetch(fileName);
-      if (!response.ok) throw new Error(`Datei ${fileName} nicht gefunden (HTTP ${response.status})`);
-      const text = await response.text();
-
-      // Extrahiert das Array aus englisch.html bzw. latein.html (egal ob als <script> oder direktes Array)
-      const regex = new RegExp(`(?:const|let|var)\\s+${varName}\\s*=\\s*(\\[[\\s\\S]*?\\]);`);
-      const match = text.match(regex);
-
-      let parsedData = null;
-      if (match && match[1]) {
-        parsedData = new Function(`return ${match[1]}`)();
-      } else if (text.trim().startsWith('[')) {
-        parsedData = new Function(`return ${text}`)();
-      }
-
-      if (!Array.isArray(parsedData) || parsedData.length === 0) {
-        throw new Error(`Kein gültiges Array "${varName}" in ${fileName} gefunden.`);
-      }
-
-      if (lang === 'en') {
-        englishVocab = parsedData;
-      } else {
-        latinVocab = parsedData;
-      }
-      return true;
-    } catch (err) {
-      console.error(err);
-      alert(`Fehler beim Laden von ${fileName}:\n${err.message}\n\nHinweis: Stelle sicher, dass die Datei existiert und über einen Webserver (z. B. Vercel/Live-Server) geöffnet wird.`);
-      return false;
-    } finally {
-      startBtn.disabled = false;
-      startBtn.textContent = 'Starten 🚀';
-    }
-  }
-
   function getActiveDictionary() {
-    return currentLang === 'en' ? englishVocab : latinVocab;
+    if (currentLang === 'en') {
+      return typeof englishVocab !== 'undefined' ? englishVocab : [];
+    } else {
+      return typeof latinVocab !== 'undefined' ? latinVocab : [];
+    }
   }
 
   function getForeignLangName() {
     return currentLang === 'en' ? 'Englisch' : 'Latein';
   }
 
-  async function setLanguage(lang) {
+  function setLanguage(lang) {
     currentLang = lang;
     const btnEn = document.getElementById('btn-lang-en');
     const btnLa = document.getElementById('btn-lang-la');
@@ -457,8 +409,6 @@
 
     document.getElementById('th-foreign').textContent = getForeignLangName();
     updateHideButtonsUI();
-
-    await ensureVocabLoaded(lang);
     updateDropdownOptions();
   }
 
@@ -479,15 +429,16 @@
     unitSelect.innerHTML = '';
 
     if (currentLang === 'la') {
+      const dict = getActiveDictionary();
       const allOpt = document.createElement('option');
       allOpt.value = "all";
       allOpt.textContent = "Alle Lektionen gemischt (Lektion 1 – 97)";
       unitSelect.appendChild(allOpt);
 
-      const lessonKeys = [...new Set(latinVocab.map(v => v.sub))];
+      const lessonKeys = [...new Set(dict.map(v => v.sub))];
       lessonKeys.forEach(key => {
         const num = key.replace('lek', '');
-        const count = latinVocab.filter(v => v.sub === key).length;
+        const count = dict.filter(v => v.sub === key).length;
         const opt = document.createElement('option');
         opt.value = key;
         opt.textContent = `Lektion ${num} (${count} Vokabeln)`;
@@ -561,12 +512,15 @@
     return isSentence(vocabItem.foreign) || isSentence(vocabItem.german);
   }
 
-  async function startApp() {
-    const loaded = await ensureVocabLoaded(currentLang);
-    if (!loaded) return;
+  function startApp() {
+    const dict = getActiveDictionary();
+    if (dict.length === 0) {
+      const fileName = currentLang === 'en' ? 'englisch.js' : 'latein.js';
+      alert(`Der Wortschatz konnte nicht geladen werden! Bitte prüfe, ob die Datei "${fileName}" im selben Ordner wie index.html liegt.`);
+      return;
+    }
 
     const selection = unitSelect.value;
-    const dict = getActiveDictionary();
     let pool = [];
 
     if (currentLang === 'la') {
