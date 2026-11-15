@@ -436,6 +436,13 @@
       unitSelect.appendChild(allOpt);
 
       const lessonKeys = [...new Set(dict.map(v => v.sub))];
+      // Sortiere Lektionen numerisch (lek1, lek2, ..., lek10, ...) statt alphabetisch
+      lessonKeys.sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, '')) || 0;
+        const numB = parseInt(b.replace(/\D/g, '')) || 0;
+        return numA - numB;
+      });
+
       lessonKeys.forEach(key => {
         const num = key.replace('lek', '');
         const count = dict.filter(v => v.sub === key).length;
@@ -525,7 +532,6 @@
 
     if (currentLang === 'la') {
       pool = selection === 'all' ? [...dict] : dict.filter(v => v.sub === selection);
-      
     } else {
       if (structMode === 'single') {
         pool = dict.filter(v => v.sub === selection);
