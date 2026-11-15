@@ -524,6 +524,72 @@
     return text.includes(' ') || text.includes('.') || text.includes('!') || text.includes('?');
   }
 
+  // Prüft, ob eine Vokabel ein einzelnes, einfaches Wort ohne Satzzeichen/Klammern ist
+  function isSimpleSingleWord(vocabItem) {
+    const en = vocabItem.english.trim();
+    const de = vocabItem.german.trim();
+    // Sätze, Auslassungspunkte oder Klammer-Erklärungen ausschließen
+    if (/[.!?(]/.test(en) || /[.!?(]/.test(de)) return false;
+    // Englische Seite muss ein einzelnes Wort sein (keine Leerzeichen oder Schrägstriche)
+    if (en.includes(' ') || en.includes('/')) return false;
+    return true;
+  }
+
+  // Bereitet alle möglichen Einzelbedeutungen einer Vokabel für die Prüfung auf
+  function getValidMeanings(answerText) {
+    const parts = answerText.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+    const meanings = new Set();
+
+    parts.forEach(part => {
+      const lower = part.toLowerCase();
+      meanings.add(lower);
+
+      // Varianten mit Schrägstrich auflösen (z. B. "ein/e" -> "ein", "eine" | "Engländer/in" -> "engländer", "engländerin")
+      if (lower.includes('/')) {
+        const slashParts = lower.split('/');
+        if (slashParts.length === 2) {
+          const base = slashParts[0].trim();
+          const suffix = slashParts[1].trim();
+          if (suffix.length <= 3) {
+            meanings.add(base);
+            meanings.add(base + suffix);
+          } else {
+            meanings.add(base);
+            meanings.add(suffix);
+          }
+        }
+      }
+    });
+
+    return Array.from(meanings);
+  }
+
+  // Berechnet die Damerau-Levenshtein-Distanz (erkennt 1 fehlenden, überflüssigen, falschen oder vertauschten Buchstaben)
+  function getEditDistance(a, b) {
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,      // Zeichen gelöscht
+          dp[i][j - 1] + 1,      // Zeichen eingefügt
+          dp[i - 1][j - 1] + cost // Zeichen ersetzt
+        );
+        // Buchstabendreher (Transposition zweier benachbarter Zeichen)
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+          dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+        }
+      }
+    }
+    return dp[m][n];
+  }
+
   function updateVocabPool() {
     const selection = unitSelect.value;
     const [type, levelStr] = selection.split('_');
@@ -568,7 +634,13 @@
     nextBtn.classList.add('hidden');
 
     isEnToDe = Math.random() < 0.5;
-    isMcMode = Math.random() < 0.5;
+    
+    // Nur einfache Einzelwörter dürfen zufällig als Texteingabe dran kommen; Sätze/Phrasen immer Multiple Choice
+    if (isSimpleSingleWord(current)) {
+      isMcMode = Math.random() < 0.5;
+    } else {
+      isMcMode = true;
+    }
 
     const questionText = isEnToDe ? current.english : current.german;
     const expectedAnswer = isEnToDe ? current.german : current.english;
@@ -576,7 +648,7 @@
     if (isEnToDe) {
       langLabelEl.textContent = 'Englisch';
       langLabelEl.className = 'lang-badge lang-en';
-      inputEl.placeholder = 'Deutsche Übersetzung...';
+      inputEl.placeholder = 'Deutsche Übersetzung (ein Wort)...';
     } else {
       langLabelEl.textContent = 'Deutsch';
       langLabelEl.className = 'lang-badge lang-de';
@@ -604,13 +676,13 @@
     
     const targetIsSentence = isSentence(correctAnswer);
 
-    // Filtert passende falsche Optionen (Sätze zu Sätzen, Wörter zu Wörtern)
     const wrongOptions = allVocab
       .map(item => isEnToDe ? item.german : item.english)
       .filter(word => word !== correctAnswer && isSentence(word) === targetIsSentence);
     
-    // Falls zu wenig passende Sätze da sind, nimm zur Not alle anderen
-    const poolToUse = wrongOptions.length >= 2 ? wrongOptions : allVocab.map(item => isEnToDe ? item.german : item.english).filter(w => w !== correctAnswer);
+    const poolToUse = wrongOptions.length >= 2
+      ? [...new Set(wrongOptions)]
+      : [...new Set(allVocab.map(item => isEnToDe ? item.german : item.english).filter(w => w !== correctAnswer))];
 
     poolToUse.sort(() => Math.random() - 0.5);
     
@@ -657,19 +729,29 @@
   function checkTypedAnswer() {
     const userAnswer = inputEl.value.trim().toLowerCase();
     const originalCorrect = isEnToDe ? activeVocabList[currentIndex].german : activeVocabList[currentIndex].english;
-    const correctAnswerLower = originalCorrect.toLowerCase();
     
     if (userAnswer === '') return;
 
     inputEl.disabled = true;
     checkBtn.classList.add('hidden');
 
-    const possibleAnswers = correctAnswerLower.split(/[,/]/).map(s => s.trim());
-    const isCorrect = userAnswer === correctAnswerLower || possibleAnswers.includes(userAnswer);
+    const validMeanings = getValidMeanings(originalCorrect);
+    const isExactMatch = validMeanings.includes(userAnswer);
 
-    if (isCorrect) {
+    // Tippfehler-Toleranz: genau 1 Bearbeitungsfehler bei Wörtern ab 3 Buchstaben
+    let isNearMatch = false;
+    if (!isExactMatch && userAnswer.length >= 2) {
+      isNearMatch = validMeanings.some(meaning => meaning.length >= 3 && getEditDistance(userAnswer, meaning) === 1);
+    }
+
+    if (isExactMatch) {
       feedbackEl.textContent = 'Richtig! 🎉';
       feedbackEl.style.color = '#10b981';
+      score++;
+      nextBtn.classList.remove('hidden');
+    } else if (isNearMatch) {
+      feedbackEl.textContent = `Fast richtig! ✍️ (Richtig geschrieben: "${originalCorrect}")`;
+      feedbackEl.style.color = '#d97706';
       score++;
       nextBtn.classList.remove('hidden');
     } else {
