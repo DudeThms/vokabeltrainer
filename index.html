@@ -525,8 +525,7 @@
 
     if (currentLang === 'la') {
       pool = selection === 'all' ? [...dict] : dict.filter(v => v.sub === selection);
-      // In Latein keine Sätze abfragen/anzeigen
-      pool = pool.filter(v => !isItemSentence(v));
+      
     } else {
       if (structMode === 'single') {
         pool = dict.filter(v => v.sub === selection);
