@@ -218,7 +218,7 @@
     .action-btn:hover:not(:disabled) { background-color: #1d4ed8; }
     .btn-next { background-color: #10b981; margin-top: 10px; }
     .btn-next:hover { background-color: #059669; }
-
+    
     /* Lernmodus Styles */
     .learn-container {
       text-align: left;
@@ -242,7 +242,7 @@
       background-color: #f8fafc;
       color: #475569;
     }
-
+    
     .hidden-col {
       color: transparent;
       background-color: #e2e8f0;
@@ -368,7 +368,7 @@
       <span id="learn-page-info">Seiteninfo</span>
       <span id="learn-total-info" style="color: #64748b; font-size: 12px;"></span>
     </div>
-
+    
     <!-- Zwei Ausblende-Buttons nebeneinander -->
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
       <button id="btn-hide-de" class="secondary-btn" style="flex: 1; background-color: #0284c7; font-size: 12px; padding: 8px;" onclick="toggleHideColumn('de')">🙈 Deutsch ausblenden</button>
@@ -395,7 +395,7 @@
     <button class="action-btn btn-next" onclick="switchToQuizFromLearn()">Zur Abfrage wechseln ✍️</button>
     <button class="secondary-btn" style="width: 100%; margin-top: 10px; background-color: #94a3b8;" onclick="resetToMenu()">Zurück zum Menü</button>
   </div>
-
+  
   <!-- Abfrage-Modus (Quiz) -->
   <div id="quiz-area" class="hidden">
     <div class="top-bar">
@@ -437,7 +437,7 @@
   let appMode = 'learn'; // 'learn' oder 'quiz'
   let structMode = 'single'; // 'single' oder 'unit'
   let hiddenColumn = null; // null, 'de' oder 'foreign'
-
+  
   let activeVocabList = [];
   let currentLearnPage = 0;
   const itemsPerPage = 6;
@@ -556,7 +556,6 @@
 
     laMultiList.innerHTML = '';
 
-    // Option: Alle Lektionen
     const allLabel = document.createElement('label');
     allLabel.className = 'multi-option all-option';
     const allCheckbox = document.createElement('input');
@@ -822,7 +821,7 @@
 
     pageItems.forEach(item => {
       const tr = document.createElement('tr');
-
+      
       const tdForeign = document.createElement('td');
       tdForeign.innerHTML = `<strong>${item.foreign}</strong>`;
       if (hiddenColumn === 'foreign') {
@@ -860,7 +859,7 @@
   function switchToQuizFromLearn() {
     document.getElementById('learn-area').classList.add('hidden');
     document.getElementById('quiz-area').classList.remove('hidden');
-
+    
     activeVocabList.sort(() => Math.random() - 0.5);
     activeVocabList = activeVocabList.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
     restartQuiz();
@@ -987,13 +986,13 @@
     const wrongOptions = dict
       .map(item => isDeToForeign ? item.foreign : item.german)
       .filter(word => word !== correctAnswer && isSentence(word) === targetIsSentence && !word.includes(','));
-
+    
     const poolToUse = wrongOptions.length >= 2
       ? [...new Set(wrongOptions)]
       : [...new Set(dict.map(item => isDeToForeign ? item.foreign : item.german).filter(w => w !== correctAnswer && isSentence(w) === targetIsSentence))];
 
     poolToUse.sort(() => Math.random() - 0.5);
-
+    
     const selectedOptions = [correctAnswer, ...poolToUse.slice(0, 2)];
     selectedOptions.sort(() => Math.random() - 0.5);
 
@@ -1038,7 +1037,7 @@
     const userAnswer = inputEl.value.trim().toLowerCase();
     const currentVocab = activeVocabList[currentIndex];
     const originalCorrect = isDeToForeign ? currentVocab.foreign : currentVocab.german;
-
+    
     if (userAnswer === '') return;
 
     inputEl.disabled = true;
@@ -1069,7 +1068,7 @@
         updateCreditsDisplay();
         feedbackEl.textContent = `Schon wieder ein Tippfehler! ❌ (Richtig wäre: "${originalCorrect}")`;
         feedbackEl.style.color = '#ef4444';
-
+        
         if (credits <= 0) {
           setTimeout(() => endGame(false), 1500);
         } else {
@@ -1081,7 +1080,7 @@
       updateCreditsDisplay();
       feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
       feedbackEl.style.color = '#ef4444';
-
+      
       if (credits <= 0) {
         setTimeout(() => endGame(false), 1500);
       } else {
@@ -1102,7 +1101,7 @@
   function endGame(success) {
     document.getElementById('quiz-area').classList.add('hidden');
     document.getElementById('result-area').classList.remove('hidden');
-
+    
     const titleEl = document.getElementById('result-title');
     const scoreTextEl = document.getElementById('score-text');
 
