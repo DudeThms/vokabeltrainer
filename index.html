@@ -100,7 +100,7 @@
       margin-bottom: 12px;
     }
 
-    /* Mehrfachauswahl für Latein-Abfragemodus */
+    /* Lektionsauswahl für Latein (einzeln, mehrfach oder alle in beiden Modi) */
     .multi-select-box {
       border: 1px solid #cbd5e1;
       border-radius: 8px;
@@ -112,6 +112,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       padding: 8px 10px;
       background-color: #f1f5f9;
       border-bottom: 1px solid #e2e8f0;
@@ -132,7 +133,7 @@
       text-decoration: underline;
     }
     .multi-select-list {
-      max-height: 175px;
+      max-height: 185px;
       overflow-y: auto;
       padding: 6px 8px;
       display: flex;
@@ -218,7 +219,7 @@
     .action-btn:hover:not(:disabled) { background-color: #1d4ed8; }
     .btn-next { background-color: #10b981; margin-top: 10px; }
     .btn-next:hover { background-color: #059669; }
-    
+
     /* Lernmodus Styles */
     .learn-container {
       text-align: left;
@@ -242,7 +243,7 @@
       background-color: #f8fafc;
       color: #475569;
     }
-    
+
     .hidden-col {
       color: transparent;
       background-color: #e2e8f0;
@@ -344,7 +345,7 @@
       <!-- Wird dynamisch per JS befüllt -->
     </select>
 
-    <!-- Mehrfachauswahl nur für Latein im Abfragemodus -->
+    <!-- Lektionsauswahl für Latein (einzeln, mehrfach oder alle in Lern- und Abfragemodus) -->
     <div id="la-multi-select" class="multi-select-box hidden">
       <div class="multi-select-toolbar">
         <span id="la-selected-count">0 Lektionen gewählt</span>
@@ -368,7 +369,7 @@
       <span id="learn-page-info">Seiteninfo</span>
       <span id="learn-total-info" style="color: #64748b; font-size: 12px;"></span>
     </div>
-    
+
     <!-- Zwei Ausblende-Buttons nebeneinander -->
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
       <button id="btn-hide-de" class="secondary-btn" style="flex: 1; background-color: #0284c7; font-size: 12px; padding: 8px;" onclick="toggleHideColumn('de')">🙈 Deutsch ausblenden</button>
@@ -395,7 +396,7 @@
     <button class="action-btn btn-next" onclick="switchToQuizFromLearn()">Zur Abfrage wechseln ✍️</button>
     <button class="secondary-btn" style="width: 100%; margin-top: 10px; background-color: #94a3b8;" onclick="resetToMenu()">Zurück zum Menü</button>
   </div>
-  
+
   <!-- Abfrage-Modus (Quiz) -->
   <div id="quiz-area" class="hidden">
     <div class="top-bar">
@@ -437,7 +438,8 @@
   let appMode = 'learn'; // 'learn' oder 'quiz'
   let structMode = 'single'; // 'single' oder 'unit'
   let hiddenColumn = null; // null, 'de' oder 'foreign'
-  
+  let savedLatinSelection = [];
+
   let activeVocabList = [];
   let currentLearnPage = 0;
   const itemsPerPage = 6;
@@ -513,20 +515,18 @@
     updateSelectionUI();
   }
 
-  function isLatinQuizMultiSelect() {
-    return currentLang === 'la' && appMode === 'quiz';
+  function isLatinMultiSelect() {
+    return currentLang === 'la';
   }
 
   function updateSelectionUI() {
     const selectLabel = document.getElementById('select-label');
-    const isMulti = isLatinQuizMultiSelect();
+    const isMulti = isLatinMultiSelect();
 
     if (currentLang === 'en') {
       selectLabel.textContent = "4. Bereich auswählen:";
-    } else if (isMulti) {
-      selectLabel.textContent = "3. Lektionen auswählen (Mehrfachauswahl):";
     } else {
-      selectLabel.textContent = "3. Lektion auswählen:";
+      selectLabel.textContent = "3. Lektion(en) auswählen (einzeln, mehrfach oder alle):";
     }
 
     unitSelect.classList.toggle('hidden', isMulti);
@@ -550,7 +550,11 @@
   }
 
   function populateLatinMultiSelect() {
-    const previouslySelected = new Set(getSelectedLatinLessons());
+    const currentDomSelection = getSelectedLatinLessonsFromDom();
+    if (currentDomSelection.length > 0) {
+      savedLatinSelection = currentDomSelection;
+    }
+    const previouslySelected = new Set(savedLatinSelection);
     const dict = getActiveDictionary();
     const lessonKeys = getSortedLatinLessonKeys(dict);
 
@@ -568,10 +572,11 @@
         cb.checked = false;
         cb.disabled = allCheckbox.checked;
       });
+      savedLatinSelection = getSelectedLatinLessonsFromDom();
       updateLatinSelectedCount();
     };
     allLabel.appendChild(allCheckbox);
-    allLabel.appendChild(document.createTextNode('Alle Lektionen gemischt (Lektion 1 – 97)'));
+    allLabel.appendChild(document.createTextNode(`Alle Lektionen gemischt (${dict.length} Vokabeln)`));
     laMultiList.appendChild(allLabel);
 
     lessonKeys.forEach(key => {
@@ -587,7 +592,10 @@
       cb.value = key;
       cb.checked = previouslySelected.has(key);
       cb.disabled = allCheckbox.checked;
-      cb.onchange = updateLatinSelectedCount;
+      cb.onchange = () => {
+        savedLatinSelection = getSelectedLatinLessonsFromDom();
+        updateLatinSelectedCount();
+      };
 
       label.appendChild(cb);
       label.appendChild(document.createTextNode(`Lektion ${num} (${count} Vokabeln)`));
@@ -606,10 +614,11 @@
       cb.disabled = false;
       cb.checked = selectAll;
     });
+    savedLatinSelection = getSelectedLatinLessonsFromDom();
     updateLatinSelectedCount();
   }
 
-  function getSelectedLatinLessons() {
+  function getSelectedLatinLessonsFromDom() {
     const allCheckbox = document.getElementById('la-all-lessons');
     if (allCheckbox && allCheckbox.checked) {
       return ['all'];
@@ -618,17 +627,32 @@
     return Array.from(checkedBoxes).map(cb => cb.value);
   }
 
+  function getSelectedLatinLessons() {
+    const domSelection = getSelectedLatinLessonsFromDom();
+    if (domSelection.length > 0 || (laMultiList && laMultiList.children.length > 0)) {
+      return domSelection;
+    }
+    return savedLatinSelection;
+  }
+
   function updateLatinSelectedCount() {
     const selected = getSelectedLatinLessons();
+    const dict = currentLang === 'la'
+      ? (typeof latinVocab !== 'undefined' ? latinVocab : [])
+      : [];
+
     if (selected.includes('all')) {
-      laSelectedCount.textContent = 'Alle Lektionen aktiv';
+      laSelectedCount.textContent = `Alle Lektionen (${dict.length} Vokabeln)`;
     } else if (selected.length === 0) {
       laSelectedCount.textContent = 'Bitte mind. 1 Lektion wählen';
-    } else if (selected.length === 1) {
-      const num = selected[0].replace('lek', '');
-      laSelectedCount.textContent = `Lektion ${num} gewählt`;
     } else {
-      laSelectedCount.textContent = `${selected.length} Lektionen gewählt`;
+      const vocabCount = dict.filter(v => selected.includes(v.sub)).length;
+      if (selected.length === 1) {
+        const num = selected[0].replace('lek', '');
+        laSelectedCount.textContent = `Lektion ${num} (${vocabCount} Vokabeln)`;
+      } else {
+        laSelectedCount.textContent = `${selected.length} Lektionen (${vocabCount} Vokabeln)`;
+      }
     }
   }
 
@@ -731,19 +755,15 @@
     let pool = [];
 
     if (currentLang === 'la') {
-      if (appMode === 'quiz') {
-        const selectedLessons = getSelectedLatinLessons();
-        if (selectedLessons.length === 0) {
-          alert("Bitte wähle mindestens eine Lektion für die Abfrage aus.");
-          return;
-        }
-        pool = selectedLessons.includes('all')
-          ? [...dict]
-          : dict.filter(v => selectedLessons.includes(v.sub));
-      } else {
-        const selection = unitSelect.value;
-        pool = selection === 'all' ? [...dict] : dict.filter(v => v.sub === selection);
+      const selectedLessons = getSelectedLatinLessons();
+      if (selectedLessons.length === 0) {
+        alert("Bitte wähle mindestens eine Lektion aus.");
+        return;
       }
+      savedLatinSelection = selectedLessons;
+      pool = selectedLessons.includes('all')
+        ? [...dict]
+        : dict.filter(v => selectedLessons.includes(v.sub));
     } else {
       const selection = unitSelect.value;
       if (structMode === 'single') {
@@ -821,7 +841,7 @@
 
     pageItems.forEach(item => {
       const tr = document.createElement('tr');
-      
+
       const tdForeign = document.createElement('td');
       tdForeign.innerHTML = `<strong>${item.foreign}</strong>`;
       if (hiddenColumn === 'foreign') {
@@ -859,7 +879,7 @@
   function switchToQuizFromLearn() {
     document.getElementById('learn-area').classList.add('hidden');
     document.getElementById('quiz-area').classList.remove('hidden');
-    
+
     activeVocabList.sort(() => Math.random() - 0.5);
     activeVocabList = activeVocabList.slice(0, 25).map(item => ({ ...item, nearMissCount: 0 }));
     restartQuiz();
@@ -986,13 +1006,13 @@
     const wrongOptions = dict
       .map(item => isDeToForeign ? item.foreign : item.german)
       .filter(word => word !== correctAnswer && isSentence(word) === targetIsSentence && !word.includes(','));
-    
+
     const poolToUse = wrongOptions.length >= 2
       ? [...new Set(wrongOptions)]
       : [...new Set(dict.map(item => isDeToForeign ? item.foreign : item.german).filter(w => w !== correctAnswer && isSentence(w) === targetIsSentence))];
 
     poolToUse.sort(() => Math.random() - 0.5);
-    
+
     const selectedOptions = [correctAnswer, ...poolToUse.slice(0, 2)];
     selectedOptions.sort(() => Math.random() - 0.5);
 
@@ -1037,7 +1057,7 @@
     const userAnswer = inputEl.value.trim().toLowerCase();
     const currentVocab = activeVocabList[currentIndex];
     const originalCorrect = isDeToForeign ? currentVocab.foreign : currentVocab.german;
-    
+
     if (userAnswer === '') return;
 
     inputEl.disabled = true;
@@ -1068,7 +1088,7 @@
         updateCreditsDisplay();
         feedbackEl.textContent = `Schon wieder ein Tippfehler! ❌ (Richtig wäre: "${originalCorrect}")`;
         feedbackEl.style.color = '#ef4444';
-        
+
         if (credits <= 0) {
           setTimeout(() => endGame(false), 1500);
         } else {
@@ -1080,7 +1100,7 @@
       updateCreditsDisplay();
       feedbackEl.textContent = `Falsch! Richtig wäre: "${originalCorrect}"`;
       feedbackEl.style.color = '#ef4444';
-      
+
       if (credits <= 0) {
         setTimeout(() => endGame(false), 1500);
       } else {
@@ -1101,7 +1121,7 @@
   function endGame(success) {
     document.getElementById('quiz-area').classList.add('hidden');
     document.getElementById('result-area').classList.remove('hidden');
-    
+
     const titleEl = document.getElementById('result-title');
     const scoreTextEl = document.getElementById('score-text');
 
